@@ -19,51 +19,77 @@ export default function Login() {
   };
 
   return (
-   <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-     <div className="max-w-md w-full space-y-8">
-       <div>
-         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-           Đăng nhập
-         </h2>
-       </div>
-       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-         <div className="rounded-md shadow-sm -space-y-px">
-           <div>
-             <input
-               type="email"
-               required
-               className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-               placeholder="Email"
-               value={formData.email}
-               onChange={(e) => setFormData({...formData, email: e.target.value})}
-             />
-           </div>
-           <div>
-             <input
-               type="password"
-               required
-               className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-               placeholder="Mật khẩu"
-               value={formData.password}
-               onChange={(e) => setFormData({...formData, password: e.target.value})}
-             />
-           </div>
-         </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-primary/10 to-secondary/10 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Chào mừng trở lại
+          </h2>
+          <p className="text-gray-600">Đăng nhập để tiếp tục</p>
+        </div>
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <EnvelopeIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  required
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="your@email.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mật khẩu
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <LockClosedIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  required
+                  className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                />
+              </div>
+            </div>
+          </div>
+
           <div>
-           <button
-             type="submit"
-             className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-           >
-             Đăng nhập
-           </button>
-         </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
+            </button>
+          </div>
+
           <div className="text-sm text-center">
-           <Link to="/register" className="font-medium text-primary hover:text-secondary">
-             Chưa có tài khoản? Đăng ký ngay
-           </Link>
-         </div>
-       </form>
-     </div>
-   </div>
- );
+            <span className="text-gray-600">Chưa có tài khoản? </span>
+            <Link 
+              to="/register"
+              className="font-medium text-primary hover:text-primary/80"
+            >
+              Đăng ký ngay
+            </Link>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }

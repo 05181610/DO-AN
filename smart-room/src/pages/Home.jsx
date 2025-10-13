@@ -6,19 +6,31 @@ import SearchBar from '../components/common/SearchBar';
 import RoomCard from '../components/room/RoomCard';
 
 export default function Home() {
-  const { data: featuredRooms, isLoading: featuredLoading } = useQuery({
+  const { data: featuredRooms, isLoading: featuredLoading, error: featuredError } = useQuery({
     queryKey: ['featuredRooms'],
     queryFn: async () => {
-      const response = await axiosClient.get('/api/rooms/featured');
-      return response.data;
+      try {
+        const response = await axiosClient.get('/rooms/featured');
+        console.log('Featured rooms response:', response.data);
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching featured rooms:', error);
+        throw error;
+      }
     }
   });
 
-  const { data: latestRooms, isLoading: latestLoading } = useQuery({
+  const { data: latestRooms, isLoading: latestLoading, error: latestError } = useQuery({
     queryKey: ['latestRooms'],
     queryFn: async () => {
-      const response = await axiosClient.get('/api/rooms/latest');
-      return response.data;
+      try {
+        const response = await axiosClient.get('/rooms/latest');
+        console.log('Latest rooms response:', response.data);
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching latest rooms:', error);
+        throw error;
+      }
     }
   });
 
@@ -52,9 +64,13 @@ export default function Home() {
         <h2 className="text-2xl font-bold mb-4">Phòng nổi bật</h2>
         {featuredLoading ? (
           <div>Đang tải...</div>
+        ) : featuredError ? (
+          <div className="text-red-500">Có lỗi khi tải phòng nổi bật: {featuredError.message}</div>
+        ) : !featuredRooms || featuredRooms.length === 0 ? (
+          <div>Không có phòng nổi bật nào</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredRooms?.map((room) => (
+            {featuredRooms.map((room) => (
               <RoomCard key={room.id} room={room} />
             ))}
           </div>
@@ -66,9 +82,13 @@ export default function Home() {
         <h2 className="text-2xl font-bold mb-4">Phòng mới đăng</h2>
         {latestLoading ? (
           <div>Đang tải...</div>
+        ) : latestError ? (
+          <div className="text-red-500">Có lỗi khi tải phòng mới: {latestError.message}</div>
+        ) : !latestRooms || latestRooms.length === 0 ? (
+          <div>Không có phòng mới nào</div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {latestRooms?.map((room) => (
+            {latestRooms.map((room) => (
               <RoomCard key={room.id} room={room} />
             ))}
           </div>

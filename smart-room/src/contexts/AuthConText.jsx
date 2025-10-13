@@ -11,15 +11,18 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       axiosClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       // Fetch user profile when token changes
-      axiosClient.get('/api/users/profile')
+      axiosClient.get('/users/profile')
         .then(response => {
           setUser(response.data);
+          localStorage.setItem('user', JSON.stringify(response.data));
         })
-        .catch(() => {
+        .catch((error) => {
+          console.error('Error fetching user profile:', error);
           logout();
         });
     } else {
       delete axiosClient.defaults.headers.common['Authorization'];
+      localStorage.removeItem('user');
       setUser(null);
     }
   }, [token]);

@@ -27,7 +27,7 @@ export default function RoomListing() {
         type: searchParams.get('type')
       };
 
-      const response = await axiosClient.get('/api/rooms', {
+      const response = await axiosClient.get('/rooms', {
         params: Object.fromEntries(
           Object.entries(params).filter(([_, value]) => value != null)
         )

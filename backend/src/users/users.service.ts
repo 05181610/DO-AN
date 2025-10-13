@@ -10,6 +10,7 @@ import { UploadService } from '../upload/upload.service';
 import { Room } from '../rooms/entities/room.entity';
 import { Favorite } from '../favorites/entities/favorite.entity';
 import { RegisterDto } from '../auth/dto/register.dto';
+import { Review } from '../reviews/entities/review.entity';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,8 @@ export class UsersService {
     private readonly roomRepository: Repository<Room>,
     @InjectRepository(Favorite)
     private readonly favoriteRepository: Repository<Favorite>,
+    @InjectRepository(Review)
+    private readonly reviewRepository: Repository<Review>,
     private readonly uploadService: UploadService
   ) {}
 
@@ -206,6 +209,20 @@ export class UsersService {
       createdAt: favorite.createdAt
     })));
 
+    // Lấy review gần đây
+const recentReviews = await this.reviewRepository.find({
+  where: { user: { id: userId } },
+  relations: ['room'],
+  order: { createdAt: 'DESC' },
+  take: 5
+});
+
+activities.push(...recentReviews.map(review => ({
+  type: 'review',
+  description: `Đã đánh giá phòng: ${review.room.title}`,
+  createdAt: review.createdAt
+})));
+    
     // Sắp xếp theo thời gian và lấy 5 hoạt động gần nhất
     return activities
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())

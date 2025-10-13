@@ -15,7 +15,7 @@ export const useRegister = () => {
       const { confirmPassword, ...registerData } = data;
       
       try {
-        const response = await axiosClient.post('/api/auth/register', registerData);
+        const response = await axiosClient.post('/auth/register', registerData);
         console.log('Register response:', response.data);
         return response.data;
       } catch (error) {

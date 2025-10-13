@@ -12,11 +12,12 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: async (data) => {
       try {
-        const response = await axiosClient.post('/api/auth/login', data);
+        console.log('Attempting login with:', data);
+        const response = await axiosClient.post('/auth/login', data);
         console.log('Login response:', response.data);
         return response.data;
       } catch (error) {
-        console.error('Login error:', error);
+        console.error('Login error:', error?.response?.data || error);
         throw error;
       }
     },

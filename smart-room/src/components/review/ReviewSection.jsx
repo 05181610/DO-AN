@@ -6,27 +6,39 @@ import axiosClient from '../../api/axiosClient';
 export default function ReviewSection({ roomId }) {
   const queryClient = useQueryClient();
 
-  const { data: reviews, isLoading } = useQuery({
+  const { data: reviews, isLoading, error } = useQuery({
     queryKey: ['reviews', roomId],
-    queryFn: () => {
+    queryFn: async () => {
       if (!roomId) {
         throw new Error('roomId is required');
       }
-      return axiosClient.get(`/api/reviews/room/${roomId}`)
-        .then(res => res.data);
+      console.log('Frontend - Fetching reviews for roomId:', roomId, typeof roomId);
+      const response = await axiosClient.get(`/reviews/room/${roomId}`);
+      console.log('Frontend - Reviews response:', response.data);
+      return response.data;
     },
-    enabled: !!roomId
+    enabled: !!roomId,
+    onError: (err) => {
+      console.error('Frontend - Error fetching reviews:', err);
+      toast.error('Không thể tải đánh giá');
+    }
   });
 
   const createReviewMutation = useMutation({
     mutationFn: (reviewData) => 
-      axiosClient.post(`/api/reviews`, {
+      axiosClient.post(`/reviews`, {
         roomId: Number(roomId),
         comment: reviewData.content,
         rating: reviewData.rating
       }),
     onSuccess: () => {
       queryClient.invalidateQueries(['reviews', roomId]);
+      window.dispatchEvent(new CustomEvent('room-review', {
+        detail: {
+          roomId,
+          type: 'review'
+        }
+      }));
       toast.success('Đánh giá thành công');
     },
     onError: (error) => {

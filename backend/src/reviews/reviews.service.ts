@@ -4,12 +4,18 @@ import { Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { User } from '../users/entities/user.entity';
+import { Activity } from '../activities/entities/activity.entity';
+import { Room } from '../rooms/entities/room.entity';
 
 @Injectable()
 export class ReviewsService {
   constructor(
     @InjectRepository(Review)
-    private reviewRepository: Repository<Review>
+    private reviewRepository: Repository<Review>,
+    @InjectRepository(Activity)
+    private activityRepository: Repository<Activity>,
+    @InjectRepository(Room)
+    private roomRepository: Repository<Room>
   ) {}
 
   async create(userId: number, createReviewDto: CreateReviewDto) {
@@ -21,7 +27,23 @@ export class ReviewsService {
         rating: createReviewDto.rating
       });
 
-      return await this.reviewRepository.save(review);
+      await this.reviewRepository.save(review);
+
+      const room = await this.roomRepository.findOne({
+        where: { id: createReviewDto.roomId }
+      });
+
+      const activity = this.activityRepository.create({
+        type: 'review',
+        user: { id: userId },
+        room: { id: createReviewDto.roomId },
+        description: `Đã đánh giá phòng: ${room.title}`,
+        createdAt: new Date()
+      });
+
+      await this.activityRepository.save(activity);
+
+      return review;
     } catch (error) {
       console.error('Create review error:', error);
       throw new BadRequestException('Không thể tạo đánh giá');
@@ -30,18 +52,21 @@ export class ReviewsService {
 
   async findByRoom(roomId: number) {
     try {
-      console.log('Finding reviews for room:', roomId, typeof roomId);
+      console.log('ReviewService - Finding reviews for room:', roomId, typeof roomId);
       
-      const parsedRoomId = parseInt(roomId.toString(), 10);
-      if (isNaN(parsedRoomId)) {
+      // Kiểm tra roomId
+      if (!roomId || isNaN(roomId)) {
+        console.error('ReviewService - Invalid roomId:', roomId);
         throw new BadRequestException('Invalid roomId');
       }
 
       const reviews = await this.reviewRepository.find({
-        where: { room: { id: parsedRoomId } },
+        where: { room: { id: roomId } },
         relations: ['user'],
         order: { createdAt: 'DESC' }
       });
+
+      console.log('ReviewService - Found reviews:', reviews.length);
 
       return reviews.map(review => ({
         id: review.id,
@@ -60,14 +85,34 @@ export class ReviewsService {
   }
 
   async deleteReview(id: number, userId: number) {
-    const review = await this.reviewRepository.findOne({
-      where: { id, user: { id: userId } },
-    });
+    try {
+      const review = await this.reviewRepository.findOne({
+        where: { id, user: { id: userId } },
+        relations: ['user', 'room']
+      });
 
-    if (!review) {
-      throw new NotFoundException('Không tìm thấy đánh giá hoặc không có quyền xóa');
+      if (!review) {
+        throw new NotFoundException('Không tìm thấy đánh giá hoặc không có quyền xóa');
+      }
+
+      // Lưu activity trước khi xóa review
+      const activity = this.activityRepository.create({
+        type: 'delete_review',
+        user: { id: userId },
+        room: { id: review.room.id },
+        description: `Đã xóa đánh giá cho phòng: ${review.room.title}`,
+        createdAt: new Date()
+      });
+
+      await this.activityRepository.save(activity);
+
+      // Xóa review
+      await this.reviewRepository.remove(review);
+
+      return { message: 'Xóa đánh giá thành công' };
+    } catch (error) {
+      console.error('Delete review error:', error);
+      throw new BadRequestException('Không thể xóa đánh giá');
     }
-
-    return this.reviewRepository.remove(review);
   }
 }

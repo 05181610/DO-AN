@@ -76,8 +76,8 @@ export class RoomsService {
   async getFeatured() {
     try {
       const rooms = await this.roomRepository.find({
-        where: { isFeatured: true },
-        relations: ['images'],
+        relations: ['images', 'user'],
+        order: { views: 'DESC' },
         take: 6,
       });
       console.log('Featured rooms found:', rooms.length);
@@ -89,11 +89,18 @@ export class RoomsService {
   }
 
   async getLatest() {
-    return this.roomRepository.find({
-      relations: ['images'],
-      order: { createdAt: 'DESC' },
-      take: 6,
-    });
+    try {
+      const rooms = await this.roomRepository.find({
+        relations: ['images', 'user'],
+        order: { createdAt: 'DESC' },
+        take: 6,
+      });
+      console.log('Latest rooms found:', rooms.length);
+      return rooms;
+    } catch (error) {
+      console.error('Error getting latest rooms:', error);
+      throw error;
+    }
   }
 
   async getMyRooms(userId: number) {

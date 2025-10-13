@@ -22,7 +22,9 @@ export default function RoomDetail() {
     queryKey: ['room', id],
     queryFn: async () => {
       try {
-        const response = await axiosClient.get(`/api/rooms/${id}`);
+        console.log('Fetching room details for id:', id);
+        const response = await axiosClient.get(`/rooms/${id}`);
+        console.log('Room details response:', response.data);
         return response.data;
       } catch (error) {
         console.error('Error fetching room:', error);

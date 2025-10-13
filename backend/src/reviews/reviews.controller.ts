@@ -15,7 +15,14 @@ export class ReviewsController {
 
   @Get('room/:roomId')
   async findByRoom(@Param('roomId', ParseIntPipe) roomId: number) {
-    console.log('Received roomId:', roomId);
-    return this.reviewsService.findByRoom(roomId);
+    console.log('ReviewController - Received roomId:', roomId, typeof roomId);
+    try {
+      const reviews = await this.reviewsService.findByRoom(roomId);
+      console.log('ReviewController - Found reviews:', reviews.length);
+      return reviews;
+    } catch (error) {
+      console.error('ReviewController - Error:', error);
+      throw error;
+    }
   }
 }   

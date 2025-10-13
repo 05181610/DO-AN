@@ -40,9 +40,12 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-8">Đăng Ký Tài Khoản</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-primary/10 to-secondary/10 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Tạo tài khoản mới</h2>
+          <p className="text-gray-600">Điền thông tin để bắt đầu</p>
+        </div>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
