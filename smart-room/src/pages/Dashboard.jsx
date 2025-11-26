@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -7,6 +8,7 @@ import { StarIcon, HeartIcon, CalendarIcon, EyeIcon, DocumentIcon } from '@heroi
 import { vi } from 'date-fns/locale';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -14,7 +16,12 @@ export default function Dashboard() {
     queryFn: async () => {
       try {
         const response = await axiosClient.get('/users/dashboard-stats');
-        console.log('Dashboard stats:', response.data);
+        console.log('📊 Dashboard stats response:', response.data);
+        console.log('  ├─ totalRooms:', response.data.totalRooms);
+        console.log('  ├─ totalViews:', response.data.totalViews);
+        console.log('  ├─ totalFavorites (received):', response.data.totalFavorites);
+        console.log('  ├─ userFavorites (liked by user):', response.data.userFavorites);
+        console.log('  └─ totalBookings:', response.data.totalBookings);
         return response.data;
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
@@ -56,7 +63,13 @@ export default function Dashboard() {
     }
   });
 
-  if (isLoading) {
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return '/images/default-avatar.png';
+    if (avatarPath.startsWith('http')) return avatarPath;
+    return `http://localhost:5000/${avatarPath}`;
+  };
+
+  if (statsLoading) {
     return <div>Đang tải...</div>;
   }
 
@@ -68,7 +81,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <img 
-                src={profile?.avatar || '/images/default-avatar.png'}
+                src={getAvatarUrl(profile?.avatar)}
                 alt="Avatar" 
                 className="w-16 h-16 rounded-full border-4 border-white shadow-md"
               />
@@ -124,21 +137,21 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Favorites */}
+          {/* User's Favorites */}
           <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500 text-sm">Lượt yêu thích</p>
-                <p className="text-3xl font-bold mt-1">{stats?.totalFavorites || 0}</p>
+                <p className="text-gray-500 text-sm">Phòng yêu thích</p>
+                <p className="text-3xl font-bold mt-1">{stats?.userFavorites || 0}</p>
               </div>
               <div className="p-3 bg-red-50 rounded-full">
                 <HeartIcon className="w-6 h-6 text-red-500" />
               </div>
             </div>
-            <div className="mt-2">
-              <p className="text-sm text-green-500">
-                +{stats?.favoritesThisWeek || 0} tuần này
-              </p>
+            <div className="mt-4">
+              <Link to="/favorites" className="text-primary hover:underline text-sm">
+                Xem chi tiết →
+              </Link>
             </div>
           </div>
 
@@ -217,21 +230,27 @@ export default function Dashboard() {
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h3 className="text-xl font-semibold mb-4">Thao tác nhanh</h3>
             <div className="space-y-4">
-              <button className="w-full flex items-center justify-between p-4 bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors group">
+              <Link 
+                to="/post-room"
+                className="w-full flex items-center justify-between p-4 bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors group"
+              >
                 <div className="flex items-center space-x-3">
                   <DocumentIcon className="w-6 h-6 text-primary" />
                   <span className="font-medium text-gray-900">Đăng phòng mới</span>
                 </div>
                 <span className="text-primary group-hover:translate-x-1 transition-transform">→</span>
-              </button>
+              </Link>
 
-              <button className="w-full flex items-center justify-between p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group">
+              <Link
+                to="/bookings"
+                className="w-full flex items-center justify-between p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors group"
+              >
                 <div className="flex items-center space-x-3">
                   <CalendarIcon className="w-6 h-6 text-blue-500" />
                   <span className="font-medium text-gray-900">Xem lịch hẹn</span>
                 </div>
                 <span className="text-blue-500 group-hover:translate-x-1 transition-transform">→</span>
-              </button>
+              </Link>
 
               <button className="w-full flex items-center justify-between p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors group">
                 <div className="flex items-center space-x-3">
@@ -248,42 +267,4 @@ export default function Dashboard() {
   );
 }
 
-function RecentActivities({ activities }) {
-  return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold mb-4">Hoạt động gần đây</h2>
-      <div className="space-y-4">
-        {activities?.map((activity) => (
-          <div key={activity.id} className="flex items-start space-x-3">
-            {/* Icon based on activity type */}
-            <div className="p-2 rounded-full bg-gray-100">
-              {activity.type === 'review' && <StarIcon className="w-5 h-5 text-yellow-500" />}
-              {activity.type === 'favorite' && <HeartIcon className="w-5 h-5 text-red-500" />}
-              {activity.type === 'booking' && <CalendarIcon className="w-5 h-5 text-blue-500" />}
-              {activity.type === 'view' && <EyeIcon className="w-5 h-5 text-gray-500" />}
-            </div>
-            
-            {/* Activity content */}
-            <div className="flex-1">
-              <p className="text-sm text-gray-600">
-                {activity.message}
-                <Link 
-                  to={`/rooms/${activity.roomId}`} 
-                  className="text-primary hover:underline ml-1"
-                >
-                  {activity.roomTitle}
-                </Link>
-              </p>
-              <p className="text-xs text-gray-400">
-                {formatDistanceToNow(new Date(activity.createdAt), { 
-                  addSuffix: true,
-                  locale: vi 
-                })}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+// Xóa hàm RecentActivities không dùng

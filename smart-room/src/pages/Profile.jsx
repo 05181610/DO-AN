@@ -6,7 +6,7 @@ export default function Profile() {
   const { data: profile, isLoading } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
-      const response = await axiosClient.get('/api/users/profile');
+      const response = await axiosClient.get('/users/profile');
       return response.data;
     }
   });

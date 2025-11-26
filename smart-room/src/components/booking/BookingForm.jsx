@@ -21,7 +21,7 @@ export default function BookingForm({ roomId, onSuccess, onClose }) {
       console.log('Auth status:', isAuthenticated);
       console.log('Sending data:', data);
       
-      return axiosClient.post('/api/bookings', data);
+      return axiosClient.post('/bookings', data);
     },
     onSuccess: () => {
       toast.success('Đặt lịch xem phòng thành công');

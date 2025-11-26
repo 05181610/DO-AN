@@ -26,12 +26,16 @@ export class AuthService {
         select: ['id', 'email', 'password', 'fullName', 'role', 'avatar', 'phone'] 
       });
       
+      this.logger.log('User found:', user ? 'YES' : 'NO');
+      
       if (!user) {
         this.logger.warn('User not found: ' + email);
         throw new UnauthorizedException('Email không tồn tại');
       }
 
+      this.logger.log('Comparing password...');
       const isPasswordValid = await bcrypt.compare(password, user.password);
+      this.logger.log('Password valid:', isPasswordValid);
       
       if (!isPasswordValid) {
         this.logger.warn('Invalid password for user: ' + email);
@@ -41,7 +45,7 @@ export class AuthService {
       const { password: _, ...result } = user;
       return result;
     } catch (error) {
-      this.logger.error('Validate user error:', error);
+      this.logger.error('Validate user error:', error.message);
       throw error;
     }
   }

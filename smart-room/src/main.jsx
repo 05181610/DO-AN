@@ -11,15 +11,13 @@ import 'react-toastify/dist/ReactToastify.css';
 // Tạo QueryClient instance
 const queryClient = new QueryClient();
 ReactDOM.createRoot(document.getElementById('root')).render(
- <React.StrictMode>
-   <BrowserRouter> {/* Wrap toàn bộ ứng dụng với BrowserRouter */}
-     <Provider store={store}>
-       <QueryClientProvider client={queryClient}>
-         <AuthProvider>
-           <App />
-         </AuthProvider>
-       </QueryClientProvider>
-     </Provider>
-   </BrowserRouter>
- </React.StrictMode>
+ <BrowserRouter>
+   <Provider store={store}>
+     <QueryClientProvider client={queryClient}>
+       <AuthProvider>
+         <App />
+       </AuthProvider>
+     </QueryClientProvider>
+   </Provider>
+ </BrowserRouter>
 );

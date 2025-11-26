@@ -7,10 +7,11 @@ import { Room } from '../rooms/entities/room.entity';
 import { UploadModule } from '../upload/upload.module';
 import { Favorite } from '../favorites/entities/favorite.entity';
 import { Review } from '../reviews/entities/review.entity';
+import { Booking } from '../bookings/entities/booking.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Room, Favorite, Review]),
+    TypeOrmModule.forFeature([User, Room, Favorite, Review, Booking]),
     UploadModule,
   ],
   controllers: [UsersController],

@@ -11,7 +11,7 @@ export default function BookingsSection() {
 
   const fetchBookings = async () => {
     try {
-      const response = await axiosClient.get('/api/bookings');
+      const response = await axiosClient.get('/bookings');
       setBookings(response.data);
       setLoading(false);
     } catch (error) {

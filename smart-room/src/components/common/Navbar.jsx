@@ -1,14 +1,32 @@
 import { Link } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../../redux/slices/authSlice';
+import { useAuth } from '../../contexts/AuthConText';
+import { useEffect, useState } from 'react';
 
 const Navbar = () => {
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
-  const dispatch = useDispatch();
+  const { user, logout, token, isLoading } = useAuth();
+  const [forceUpdate, setForceUpdate] = useState(0);
+  
+  // ✅ Force re-render khi token hoặc user thay đổi
+  useEffect(() => {
+    console.log('📌 Navbar useEffect triggered - token:', !!token, 'user:', !!user);
+    setForceUpdate(prev => prev + 1);
+  }, [token, user]);
+  
+  // ✅ Fallback: lấy từ localStorage nếu context user null
+  const displayUser = user || (token ? JSON.parse(localStorage.getItem('user') || 'null') : null);
+  const isAuthenticated = !!token;
 
-  const handleLogout = () => {
-    dispatch(logout());
+  // ✅ Get full avatar URL
+  const getAvatarUrl = (avatarPath) => {
+    if (!avatarPath) return '/default-avatar.png';
+    if (avatarPath.startsWith('http')) return avatarPath;
+    return `http://localhost:5000/${avatarPath}`;
   };
+
+  console.log('🧭 Navbar render #' + forceUpdate + ':');
+  console.log('  ├─ isAuthenticated:', isAuthenticated);
+  console.log('  ├─ displayUser:', displayUser ? displayUser.fullName : 'null');
+  console.log('  └─ isLoading:', isLoading);
 
   return (
     <nav className="bg-white shadow-md">
@@ -59,8 +77,8 @@ const Navbar = () => {
                   <button className="flex text-sm rounded-full focus:outline-none">
                     <span className="sr-only">Open user menu</span>
                     <img
-                      className="h-8 w-8 rounded-full"
-                      src={user?.avatar || '/default-avatar.png'}
+                      className="h-8 w-8 rounded-full object-cover"
+                      src={getAvatarUrl(displayUser?.avatar)}
                       alt="User avatar"
                     />
                   </button>
@@ -79,7 +97,7 @@ const Navbar = () => {
                       Quản lý
                     </Link>
                     <button
-                      onClick={handleLogout}
+                      onClick={logout}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       Đăng xuất

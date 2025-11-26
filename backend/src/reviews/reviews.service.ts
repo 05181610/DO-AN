@@ -52,11 +52,8 @@ export class ReviewsService {
 
   async findByRoom(roomId: number) {
     try {
-      console.log('ReviewService - Finding reviews for room:', roomId, typeof roomId);
-      
       // Kiểm tra roomId
       if (!roomId || isNaN(roomId)) {
-        console.error('ReviewService - Invalid roomId:', roomId);
         throw new BadRequestException('Invalid roomId');
       }
 
@@ -65,8 +62,6 @@ export class ReviewsService {
         relations: ['user'],
         order: { createdAt: 'DESC' }
       });
-
-      console.log('ReviewService - Found reviews:', reviews.length);
 
       return reviews.map(review => ({
         id: review.id,
@@ -79,7 +74,6 @@ export class ReviewsService {
         }
       }));
     } catch (error) {
-      console.error('Find reviews error:', error);
       throw new BadRequestException('Không thể lấy danh sách đánh giá');
     }
   }

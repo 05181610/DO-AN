@@ -37,7 +37,7 @@ export default function RoomDetail() {
     queryKey: ['favorite', id],
     queryFn: () => {
       if (!isAuthenticated) return { isFavorite: false };
-      return axiosClient.get(`/api/rooms/${id}/favorite`)
+      return axiosClient.get(`/favorites/rooms/${id}`)
         .then(res => res.data);
     },
     enabled: !!id
@@ -47,25 +47,41 @@ export default function RoomDetail() {
 
   const favoriteMutation = useMutation({
     mutationFn: async () => {
+      console.log('🔄 Favorite mutation - isFavorite:', isFavorite, 'id:', id);
       if (isFavorite) {
-        return axiosClient.delete(`/api/rooms/${id}/favorite`);
+        console.log('🗑️ Deleting favorite for room:', id);
+        return axiosClient.delete(`/favorites/rooms/${id}`);
       } else {
-        return axiosClient.post(`/api/rooms/${id}/favorite`);
+        console.log('❤️ Adding favorite for room:', id);
+        return axiosClient.post(`/favorites/rooms/${id}`);
       }
     },
     onSuccess: () => {
+      console.log('✅ Favorite mutation success');
       queryClient.invalidateQueries(['favorite', id]);
+      
+      // Dispatch event to trigger dashboard stats refresh
+      const event = new Event('room-favorite');
+      window.dispatchEvent(event);
+      console.log('📡 Dispatched room-favorite event');
+      
       toast.success(isFavorite ? 'Đã xóa khỏi danh sách yêu thích' : 'Đã thêm vào danh sách yêu thích');
     },
     onError: (error) => {
-      console.error('Favorite error:', error);
-      toast.error('Có lỗi xảy ra khi thực hiện thao tác');
+      console.error('❌ Favorite error:', error);
+      console.error('Error message:', error.response?.data?.message);
+      console.error('Error status:', error.response?.status);
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi thực hiện thao tác');
     }
   });
 
   const handleFavorite = () => {
     if (!isAuthenticated) {
       toast.error('Vui lòng đăng nhập để thực hiện chức năng này');
+      return;
+    }
+    if (favoriteMutation.isPending) {
+      console.log('⏳ Favorite mutation already pending, ignoring duplicate click');
       return;
     }
     favoriteMutation.mutate();
@@ -103,7 +119,8 @@ export default function RoomDetail() {
             </div>
             <button 
               onClick={handleFavorite}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              disabled={favoriteMutation.isPending}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isFavorite ? (
                 <HeartSolidIcon className="w-6 h-6 text-red-500" />

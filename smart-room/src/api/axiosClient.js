@@ -6,6 +6,7 @@ const axiosClient = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true,
+  timeout: 10000,
 });
 
 // Request interceptor
@@ -30,6 +31,7 @@ axiosClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       window.location.href = '/login';
     }
     return Promise.reject(error);

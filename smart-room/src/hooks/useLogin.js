@@ -22,16 +22,23 @@ export const useLogin = () => {
       }
     },
     onSuccess: (data) => {
+      console.log('✅ Login success, data:', data);
+      
       if (data.access_token) {
-        login(data.access_token);
+        console.log('🔐 access_token found, calling login()');
+        // Lưu token và user data cùng lúc
+        login(data.access_token, data.user);
+        
+        console.log('✅ Saved to AuthContext, navigating to /dashboard');
         toast.success('Đăng nhập thành công');
-        navigate('/');
+        navigate('/dashboard');  // ← THAY ĐỔI: Điều hướng đến /dashboard
       } else {
-        console.error('Invalid response format:', data);
+        console.error('❌ Invalid response format:', data);
         toast.error('Có lỗi xảy ra');
       }
     },
     onError: (error) => {
+      console.error('❌ Login error:', error.response?.data || error.message);
       toast.error(error.response?.data?.message || 'Email hoặc mật khẩu không đúng');
     },
   });

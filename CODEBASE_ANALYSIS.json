@@ -1,0 +1,1615 @@
+{
+  "project_name": "SmartRoom - AI-Powered Room Rental Platform",
+  "project_version": "1.0.0",
+  "analysis_date": "2025-11-25",
+  "repository": {
+    "name": "DO-AN",
+    "owner": "05181610",
+    "branch": "main",
+    "location": "c:\\Users\\Lieee\\Documents\\DO.AN"
+  },
+  "system_architecture": {
+    "overview": "Full-stack web application with React frontend, NestJS backend, and MySQL database",
+    "architecture_type": "Monorepo with separate frontend and backend",
+    "deployment_model": "Centralized backend + SPA frontend",
+    "main_components": [
+      {
+        "name": "Backend",
+        "path": "backend/",
+        "framework": "NestJS 10.x",
+        "language": "TypeScript",
+        "port": 5000,
+        "key_features": [
+          "REST API",
+          "WebSocket support (Socket.io)",
+          "JWT Authentication",
+          "TypeORM ORM",
+          "MySQL Database"
+        ]
+      },
+      {
+        "name": "Frontend",
+        "path": "smart-room/",
+        "framework": "React 18.x + Vite",
+        "language": "JavaScript/JSX",
+        "port": 3000,
+        "build_tool": "Vite 5.x",
+        "css_framework": "Tailwind CSS 3.x"
+      },
+      {
+        "name": "Database",
+        "type": "MySQL 8.x",
+        "orm": "TypeORM 0.3.x",
+        "connection_config": "Environment variables (DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_DATABASE)"
+      }
+    ]
+  },
+  "backend_analysis": {
+    "framework": "NestJS",
+    "version": "10.4.20",
+    "language": "TypeScript 5.3.3",
+    "architecture_pattern": "Modular architecture with Domain-Driven Design",
+    "modules": [
+      {
+        "name": "AuthModule",
+        "path": "src/auth/",
+        "status": "ACTIVE",
+        "description": "Authentication & Authorization",
+        "components": {
+          "controller": "auth.controller.ts",
+          "service": "auth.service.ts",
+          "guards": ["jwt-auth.guard.ts"],
+          "strategies": ["jwt.strategy"]
+        },
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/auth/login",
+            "description": "User login",
+            "auth_required": false,
+            "input": "LoginDto (email, password)",
+            "output": "{ access_token, user }"
+          },
+          {
+            "method": "POST",
+            "path": "/auth/register",
+            "description": "User registration",
+            "auth_required": false,
+            "input": "RegisterDto",
+            "output": "User object with JWT token"
+          }
+        ],
+        "security": {
+          "authentication": "JWT",
+          "token_expiry": "1 day",
+          "hash_algorithm": "bcrypt"
+        }
+      },
+      {
+        "name": "UsersModule",
+        "path": "src/users/",
+        "status": "ACTIVE",
+        "description": "User management (tenants & landlords)",
+        "entities": ["User"],
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/users/profile",
+            "description": "Get user profile",
+            "auth_required": true,
+            "output": "User entity with relations"
+          },
+          {
+            "method": "PUT",
+            "path": "/users/profile",
+            "description": "Update user profile",
+            "auth_required": true,
+            "input": "UpdateProfileDto"
+          },
+          {
+            "method": "PUT",
+            "path": "/users/change-password",
+            "description": "Change password",
+            "auth_required": true,
+            "input": "ChangePasswordDto"
+          },
+          {
+            "method": "PUT",
+            "path": "/users/avatar",
+            "description": "Upload avatar",
+            "auth_required": true,
+            "input": "File upload"
+          },
+          {
+            "method": "GET",
+            "path": "/users/stats",
+            "description": "Get user statistics",
+            "auth_required": true
+          },
+          {
+            "method": "GET",
+            "path": "/users/dashboard-stats",
+            "description": "Get dashboard statistics",
+            "auth_required": true
+          }
+        ]
+      },
+      {
+        "name": "RoomsModule",
+        "path": "src/rooms/",
+        "status": "ACTIVE",
+        "description": "Room listing, creation, and management",
+        "entities": ["Room", "RoomImage", "Amenity"],
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/rooms",
+            "description": "List all rooms with pagination & filtering",
+            "auth_required": false,
+            "query_params": ["page", "limit", "price", "district", "type", "facilities"]
+          },
+          {
+            "method": "GET",
+            "path": "/rooms/featured",
+            "description": "Get featured rooms",
+            "auth_required": false
+          },
+          {
+            "method": "GET",
+            "path": "/rooms/latest",
+            "description": "Get latest rooms",
+            "auth_required": false
+          },
+          {
+            "method": "GET",
+            "path": "/rooms/:id",
+            "description": "Get room details",
+            "auth_required": false
+          },
+          {
+            "method": "GET",
+            "path": "/rooms/my-rooms",
+            "description": "Get user's rooms (landlord)",
+            "auth_required": true
+          },
+          {
+            "method": "POST",
+            "path": "/rooms",
+            "description": "Create new room",
+            "auth_required": true,
+            "input": "CreateRoomDto"
+          },
+          {
+            "method": "PUT",
+            "path": "/rooms/:id",
+            "description": "Update room",
+            "auth_required": true,
+            "input": "UpdateRoomDto"
+          },
+          {
+            "method": "DELETE",
+            "path": "/rooms/:id",
+            "description": "Delete room",
+            "auth_required": true
+          },
+          {
+            "method": "POST",
+            "path": "/rooms/upload-images",
+            "description": "Upload room images",
+            "auth_required": false,
+            "input": "File upload (max 10 files)"
+          }
+        ]
+      },
+      {
+        "name": "BookingsModule",
+        "path": "src/bookings/",
+        "status": "ACTIVE",
+        "description": "Room booking management",
+        "entities": ["Booking"],
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/bookings",
+            "description": "Create booking",
+            "auth_required": true,
+            "input": "CreateBookingDto"
+          },
+          {
+            "method": "GET",
+            "path": "/bookings",
+            "description": "Get user bookings",
+            "auth_required": true
+          },
+          {
+            "method": "GET",
+            "path": "/bookings/:id",
+            "description": "Get booking details",
+            "auth_required": false
+          },
+          {
+            "method": "PUT",
+            "path": "/bookings/:id/status",
+            "description": "Update booking status",
+            "auth_required": true,
+            "input": "{ status: string }"
+          },
+          {
+            "method": "DELETE",
+            "path": "/bookings/:id",
+            "description": "Delete booking",
+            "auth_required": true
+          }
+        ]
+      },
+      {
+        "name": "ReviewsModule",
+        "path": "src/reviews/",
+        "status": "ACTIVE",
+        "description": "Room reviews and ratings",
+        "entities": ["Review"],
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/reviews",
+            "description": "Create review",
+            "auth_required": true,
+            "input": "CreateReviewDto (comment, rating)"
+          },
+          {
+            "method": "GET",
+            "path": "/reviews/room/:roomId",
+            "description": "Get room reviews",
+            "auth_required": false,
+            "output": "Array of reviews"
+          }
+        ]
+      },
+      {
+        "name": "FavoritesModule",
+        "path": "src/favorites/",
+        "status": "ACTIVE",
+        "description": "User wishlist/favorites",
+        "entities": ["Favorite"],
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/favorites",
+            "description": "Get user favorites",
+            "auth_required": true
+          },
+          {
+            "method": "POST",
+            "path": "/favorites/rooms/:id",
+            "description": "Add room to favorites",
+            "auth_required": true
+          },
+          {
+            "method": "DELETE",
+            "path": "/favorites/rooms/:roomId",
+            "description": "Remove from favorites",
+            "auth_required": true
+          },
+          {
+            "method": "GET",
+            "path": "/favorites/rooms/:id",
+            "description": "Check if room is favorited",
+            "auth_required": true
+          },
+          {
+            "method": "GET",
+            "path": "/favorites/count",
+            "description": "Get favorites count",
+            "auth_required": true
+          }
+        ]
+      },
+      {
+        "name": "NotificationsModule",
+        "path": "src/notifications/",
+        "status": "ACTIVE",
+        "description": "User notifications system",
+        "entities": ["Notification"],
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/notifications",
+            "description": "Get user notifications",
+            "auth_required": true
+          },
+          {
+            "method": "PUT",
+            "path": "/notifications/:id/read",
+            "description": "Mark notification as read",
+            "auth_required": true
+          }
+        ]
+      },
+      {
+        "name": "ChatbotModule",
+        "path": "src/chatbot/",
+        "status": "ACTIVE",
+        "description": "AI-powered chatbot for room search assistance",
+        "services": [
+          "ChatbotService",
+          "SearchAnalyzerService",
+          "AdvancedSearchService",
+          "PreferenceAnalyzerService",
+          "NLPService"
+        ],
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/chatbot/query",
+            "description": "Send query to chatbot",
+            "auth_required": false,
+            "input": "{ query: string }",
+            "features": [
+              "Natural language query parsing",
+              "Multi-criteria search support",
+              "Smart recommendations",
+              "Contextual responses"
+            ]
+          },
+          {
+            "method": "GET",
+            "path": "/chatbot/test/*",
+            "description": "Test endpoints for chatbot functionality",
+            "auth_required": false,
+            "test_scenarios": ["all", "price-range", "district", "facilities", "advanced-search"]
+          }
+        ],
+        "ai_capabilities": {
+          "query_understanding": "Parses user intent and extracts search criteria",
+          "search_criteria": ["price_range", "district", "room_type", "facilities"],
+          "response_types": [
+            "greeting",
+            "searchResults",
+            "noResults",
+            "needMoreInfo",
+            "roomDetail",
+            "roomNotFound",
+            "error"
+          ],
+          "nlp_features": [
+            "Intent detection",
+            "Entity extraction",
+            "Query normalization",
+            "Suggestion generation"
+          ]
+        }
+      },
+      {
+        "name": "DashboardModule",
+        "path": "src/dashboard/",
+        "status": "ACTIVE",
+        "description": "Landlord dashboard with statistics",
+        "endpoints": [
+          {
+            "method": "GET",
+            "path": "/dashboard/landlord-stats",
+            "description": "Get landlord statistics",
+            "auth_required": true,
+            "output": {
+              "totalRooms": "number",
+              "totalBookings": "number",
+              "recentBookings": "array",
+              "roomStats": "array"
+            }
+          }
+        ]
+      },
+      {
+        "name": "UploadModule",
+        "path": "src/upload/",
+        "status": "ACTIVE",
+        "description": "File upload handling",
+        "endpoints": [
+          {
+            "method": "POST",
+            "path": "/upload/images",
+            "description": "Upload images",
+            "auth_required": false,
+            "input": "File multipart upload",
+            "storage": "./uploads/rooms"
+          },
+          {
+            "method": "POST",
+            "path": "/upload/avatar",
+            "description": "Upload avatar",
+            "auth_required": true,
+            "storage": "./uploads/avatars"
+          }
+        ]
+      },
+      {
+        "name": "MessagesModule",
+        "path": "src/messages/",
+        "status": "COMMENTED_OUT",
+        "description": "Real-time messaging (WebSocket)",
+        "entities": ["Message"],
+        "note": "Module exists but is commented out in app.module.ts"
+      },
+      {
+        "name": "PaymentsModule",
+        "path": "src/payments/",
+        "status": "COMMENTED_OUT",
+        "description": "Payment processing",
+        "entities": ["Payment"],
+        "note": "Module exists but is commented out in app.module.ts"
+      },
+      {
+        "name": "ReportsModule",
+        "path": "src/reports/",
+        "status": "COMMENTED_OUT",
+        "description": "Analytics and reporting",
+        "note": "Module exists but is commented out in app.module.ts"
+      }
+    ],
+    "database_entities": [
+      {
+        "name": "User",
+        "table": "user",
+        "description": "User account (tenant/landlord)",
+        "columns": [
+          { "name": "id", "type": "int", "primary": true, "generated": true },
+          { "name": "fullName", "type": "string" },
+          { "name": "email", "type": "string", "unique": true },
+          { "name": "password", "type": "string", "hashed": true },
+          { "name": "phone", "type": "string" },
+          { "name": "role", "type": "enum", "values": ["tenant", "landlord"], "default": "tenant" },
+          { "name": "avatar", "type": "string", "nullable": true },
+          { "name": "createdAt", "type": "datetime", "auto": true },
+          { "name": "updatedAt", "type": "datetime", "auto": true }
+        ],
+        "relations": {
+          "rooms": { "type": "OneToMany", "target": "Room" },
+          "bookings": { "type": "OneToMany", "target": "Booking" },
+          "reviews": { "type": "OneToMany", "target": "Review" },
+          "notifications": { "type": "OneToMany", "target": "Notification" },
+          "sentMessages": { "type": "OneToMany", "target": "Message" },
+          "receivedMessages": { "type": "OneToMany", "target": "Message" },
+          "favorites": { "type": "OneToMany", "target": "Favorite" }
+        }
+      },
+      {
+        "name": "Room",
+        "table": "room",
+        "description": "Rental room listing",
+        "columns": [
+          { "name": "id", "type": "int", "primary": true, "generated": true },
+          { "name": "title", "type": "string" },
+          { "name": "description", "type": "text" },
+          { "name": "price", "type": "int" },
+          { "name": "area", "type": "int" },
+          { "name": "location", "type": "string" },
+          { "name": "district", "type": "string" },
+          { "name": "type", "type": "string" },
+          { "name": "facilities", "type": "simple-array" },
+          { "name": "isFeatured", "type": "boolean", "default": false },
+          { "name": "isAvailable", "type": "boolean", "default": true },
+          { "name": "views", "type": "int", "default": 0 },
+          { "name": "viewCount", "type": "int", "default": 0 },
+          { "name": "favoriteCount", "type": "int", "default": 0 },
+          { "name": "bookingCount", "type": "int", "default": 0 },
+          { "name": "averageRating", "type": "decimal(2,1)", "default": 0 },
+          { "name": "userId", "type": "int", "foreign": true },
+          { "name": "createdAt", "type": "datetime", "auto": true },
+          { "name": "updatedAt", "type": "datetime", "auto": true }
+        ],
+        "relations": {
+          "user": { "type": "ManyToOne", "target": "User" },
+          "images": { "type": "OneToMany", "target": "RoomImage", "cascade": true },
+          "bookings": { "type": "OneToMany", "target": "Booking" },
+          "reviews": { "type": "OneToMany", "target": "Review" },
+          "favorites": { "type": "OneToMany", "target": "Favorite" }
+        }
+      },
+      {
+        "name": "RoomImage",
+        "table": "room_image",
+        "description": "Room images",
+        "columns": [
+          { "name": "id", "type": "int", "primary": true, "generated": true },
+          { "name": "url", "type": "string" },
+          { "name": "roomId", "type": "int", "foreign": true }
+        ]
+      },
+      {
+        "name": "Booking",
+        "table": "booking",
+        "description": "Room booking/viewing request",
+        "columns": [
+          { "name": "id", "type": "int", "primary": true, "generated": true },
+          { "name": "viewingDate", "type": "datetime" },
+          { "name": "note", "type": "string", "nullable": true },
+          { "name": "status", "type": "string", "default": "pending" },
+          { "name": "createdAt", "type": "datetime", "auto": true }
+        ],
+        "relations": {
+          "user": { "type": "ManyToOne", "target": "User", "eager": true },
+          "room": { "type": "ManyToOne", "target": "Room", "eager": true }
+        }
+      },
+      {
+        "name": "Review",
+        "table": "reviews",
+        "description": "Room review and rating",
+        "columns": [
+          { "name": "id", "type": "int", "primary": true, "generated": true },
+          { "name": "comment", "type": "string" },
+          { "name": "rating", "type": "int" },
+          { "name": "createdAt", "type": "datetime", "auto": true }
+        ],
+        "relations": {
+          "user": { "type": "ManyToOne", "target": "User" },
+          "room": { "type": "ManyToOne", "target": "Room" }
+        }
+      },
+      {
+        "name": "Favorite",
+        "table": "favorites",
+        "description": "User favorites/wishlist",
+        "columns": [
+          { "name": "id", "type": "int", "primary": true, "generated": true },
+          { "name": "createdAt", "type": "datetime", "auto": true }
+        ],
+        "relations": {
+          "user": { "type": "ManyToOne", "target": "User" },
+          "room": { "type": "ManyToOne", "target": "Room" }
+        }
+      },
+      {
+        "name": "Notification",
+        "table": "notifications",
+        "description": "User notification",
+        "columns": [
+          { "name": "id", "type": "int", "primary": true, "generated": true },
+          { "name": "title", "type": "string" },
+          { "name": "message", "type": "string" },
+          { "name": "type", "type": "string" },
+          { "name": "isRead", "type": "boolean", "default": false },
+          { "name": "createdAt", "type": "datetime", "auto": true }
+        ],
+        "relations": {
+          "user": { "type": "ManyToOne", "target": "User" }
+        }
+      },
+      {
+        "name": "Message",
+        "table": "message",
+        "description": "Direct message between users (commented out)",
+        "columns": [
+          { "name": "id", "type": "int", "primary": true, "generated": true },
+          { "name": "content", "type": "text" },
+          { "name": "isRead", "type": "boolean", "default": false },
+          { "name": "createdAt", "type": "datetime", "auto": true }
+        ]
+      },
+      {
+        "name": "Amenity",
+        "table": "amenity",
+        "description": "Room amenities/facilities",
+        "columns": [
+          { "name": "id", "type": "int", "primary": true, "generated": true },
+          { "name": "name", "type": "string" },
+          { "name": "icon", "type": "string" }
+        ]
+      }
+    ],
+    "authentication_security": {
+      "authentication_type": "JWT (JSON Web Token)",
+      "token_strategy": "JWT Strategy with Passport.js",
+      "jwt_config": {
+        "secret": "JWT_SECRET (environment variable)",
+        "expiry": "1 day",
+        "algorithm": "HS256"
+      },
+      "password_hashing": "bcrypt with salt rounds",
+      "guards": [
+        {
+          "name": "JwtAuthGuard",
+          "type": "AuthGuard('jwt')",
+          "usage": "Protected routes requiring JWT token"
+        }
+      ],
+      "authorization": {
+        "role_based": true,
+        "roles": ["tenant", "landlord"],
+        "implementation": "User.role field (basic, no @Roles decorator)",
+        "level": "BASIC - Manual role checking in services"
+      },
+      "cors_config": {
+        "origin": true,
+        "credentials": true,
+        "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        "allowedHeaders": ["Content-Type", "Authorization", "Accept"],
+        "exposedHeaders": ["Authorization"]
+      }
+    },
+    "error_handling": {
+      "global_filter": "AllExceptionsFilter",
+      "implementation": "Global exception filter catching all exceptions",
+      "error_response_format": {
+        "statusCode": "HTTP status code",
+        "timestamp": "ISO datetime",
+        "path": "Request path",
+        "message": "Error message"
+      },
+      "logging": {
+        "logger": "NestJS Logger",
+        "level": "All unhandled exceptions are logged"
+      }
+    },
+    "middleware": [
+      {
+        "name": "LoggingMiddleware",
+        "path": "src/middleware/logging.middleware.ts",
+        "description": "Request/response logging"
+      }
+    ],
+    "database_config": {
+      "type": "MySQL 8.x",
+      "host": "DB_HOST (environment variable)",
+      "port": "DB_PORT (environment variable, default 3306)",
+      "username": "DB_USERNAME",
+      "password": "DB_PASSWORD",
+      "database": "DB_DATABASE",
+      "orm": "TypeORM 0.3.27",
+      "synchronize": true,
+      "logging": true,
+      "migrations": "src/migrations/"
+    },
+    "key_dependencies": {
+      "core": [
+        "@nestjs/common@10.4.20",
+        "@nestjs/core@10.0.0",
+        "@nestjs/platform-express@10.4.15",
+        "@nestjs/typeorm@10.0.2",
+        "typeorm@0.3.27"
+      ],
+      "authentication": [
+        "@nestjs/jwt@10.0.0",
+        "@nestjs/passport@10.0.0",
+        "passport@0.6.0",
+        "passport-jwt@4.0.1",
+        "passport-local@1.0.0",
+        "bcrypt@5.1.1",
+        "jsonwebtoken@9.0.2"
+      ],
+      "database": [
+        "mysql2@3.11.5",
+        "pg@8.16.3",
+        "typeorm@0.3.27"
+      ],
+      "utilities": [
+        "@nestjs/config@3.3.0",
+        "@nestjs/swagger@8.1.0",
+        "@nestjs/websockets@10.4.15",
+        "socket.io@4.8.1",
+        "class-validator@0.14.2",
+        "class-transformer@0.5.1",
+        "multer@1.4.5-lts.1",
+        "sharp@0.33.5",
+        "natural@8.1.0",
+        "fuse.js@7.1.0"
+      ]
+    }
+  },
+  "frontend_analysis": {
+    "framework": "React",
+    "version": "18.3.1",
+    "build_tool": "Vite 5.4.10",
+    "language": "JavaScript/JSX",
+    "css_framework": "Tailwind CSS 3.4.14",
+    "state_management": [
+      {
+        "tool": "Redux Toolkit",
+        "version": "2.0.1",
+        "usage": "Global state management",
+        "slices": ["authSlice", "roomSlice"]
+      },
+      {
+        "tool": "React Context API",
+        "usage": "AuthContext for authentication state"
+      }
+    ],
+    "data_fetching": {
+      "http_client": "Axios",
+      "version": "1.7.7",
+      "base_url": "http://localhost:5000/api",
+      "features": [
+        "Request/response interceptors",
+        "JWT token injection",
+        "Auto logout on 401",
+        "Error handling"
+      ],
+      "query_library": "TanStack React Query (v4.36.1)"
+    },
+    "routing": {
+      "library": "React Router DOM v6.28.0",
+      "implementation": "BrowserRouter with routes",
+      "protected_routes": "PrivateRoute component"
+    },
+    "pages": [
+      {
+        "name": "Home",
+        "path": "/",
+        "file": "Home.jsx",
+        "description": "Landing page",
+        "auth_required": false,
+        "features": ["Room carousel", "Search bar", "Featured rooms"]
+      },
+      {
+        "name": "Room Listing",
+        "path": "/rooms",
+        "file": "RoomListing.jsx",
+        "description": "Browse all rooms with filtering",
+        "auth_required": false,
+        "features": ["Pagination", "Price filter", "District filter", "Type filter", "Facilities filter"]
+      },
+      {
+        "name": "Room Detail",
+        "path": "/rooms/:id",
+        "file": "RoomDetail.jsx",
+        "description": "View room details",
+        "auth_required": false,
+        "features": ["Images gallery", "Room info", "Reviews", "Booking form", "Favorite button"]
+      },
+      {
+        "name": "Post Room",
+        "path": "/post-room",
+        "file": "PostRoom.jsx",
+        "description": "Create new room listing (landlord)",
+        "auth_required": true,
+        "features": ["Image upload", "Form validation", "Room details entry"]
+      },
+      {
+        "name": "My Rooms",
+        "path": "/my-rooms",
+        "file": "MyRooms.jsx",
+        "description": "Landlord's room listings",
+        "auth_required": true,
+        "features": ["Room list", "Edit option", "Delete option", "View statistics"]
+      },
+      {
+        "name": "Edit Room",
+        "path": "/edit-room/:id",
+        "file": "EditRoom.jsx",
+        "description": "Edit room listing",
+        "auth_required": true,
+        "features": ["Form pre-fill", "Image management", "Update submission"]
+      },
+      {
+        "name": "Dashboard",
+        "path": "/dashboard",
+        "file": "Dashboard.jsx",
+        "description": "Tenant/Landlord dashboard",
+        "auth_required": true,
+        "features": ["Statistics", "Recent bookings", "Room analytics"]
+      },
+      {
+        "name": "Favorites",
+        "path": "/favorites",
+        "file": "FavoriteRooms.jsx",
+        "description": "User's wishlist",
+        "auth_required": true,
+        "features": ["Favorite rooms list", "Remove from favorites"]
+      },
+      {
+        "name": "Profile",
+        "path": "/profile",
+        "file": "Profile.jsx",
+        "description": "View user profile",
+        "auth_required": true,
+        "features": ["User info", "Avatar", "Edit button"]
+      },
+      {
+        "name": "Profile Edit",
+        "path": "/profile/edit",
+        "file": "ProfileEdit.jsx",
+        "description": "Edit user profile",
+        "auth_required": true,
+        "features": ["Form fields", "Avatar upload", "Save changes"]
+      },
+      {
+        "name": "Reviews",
+        "path": "/reviews/:roomId",
+        "file": "ReviewSection.jsx",
+        "description": "Room reviews and ratings",
+        "auth_required": false
+      }
+    ],
+    "component_structure": {
+      "auth": [
+        {
+          "name": "Login",
+          "file": "Login.jsx",
+          "description": "Login form component"
+        },
+        {
+          "name": "Register",
+          "file": "Register.jsx",
+          "description": "Registration form component"
+        },
+        {
+          "name": "PrivateRoute",
+          "file": "PrivateRoute.jsx",
+          "description": "Protected route wrapper"
+        },
+        {
+          "name": "Auth",
+          "file": "Auth.jsx",
+          "description": "Authentication wrapper"
+        }
+      ],
+      "room": [
+        {
+          "name": "RoomCard",
+          "file": "RoomCard.jsx",
+          "description": "Room listing card component"
+        },
+        {
+          "name": "RoomInfo",
+          "file": "RoomInfo.jsx",
+          "description": "Room information display"
+        },
+        {
+          "name": "RoomSearch",
+          "file": "RoomSearch.jsx",
+          "description": "Room search form"
+        },
+        {
+          "name": "RoomGallery",
+          "file": "RoomGallery.jsx",
+          "description": "Room image gallery"
+        },
+        {
+          "name": "ImageGallery",
+          "file": "ImageGallery.jsx",
+          "description": "Image gallery component"
+        },
+        {
+          "name": "RoomActions",
+          "file": "RoomActions.jsx",
+          "description": "Room action buttons"
+        },
+        {
+          "name": "RoomManagement",
+          "file": "RoomManagement.tsx",
+          "description": "Room management interface"
+        }
+      ],
+      "review": [
+        {
+          "name": "ReviewList",
+          "file": "ReviewList.jsx",
+          "description": "Display reviews"
+        },
+        {
+          "name": "RatingStars",
+          "file": "RatingStars.jsx",
+          "description": "Star rating component"
+        }
+      ],
+      "layout": [
+        {
+          "name": "MainLayout",
+          "file": "MainLayout.jsx",
+          "description": "Main app layout wrapper"
+        }
+      ],
+      "common": [
+        {
+          "name": "PrivateRoute",
+          "file": "PrivateRoute.jsx",
+          "description": "Route protection wrapper"
+        }
+      ]
+    },
+    "styling": {
+      "framework": "Tailwind CSS 3.4.14",
+      "plugins": [
+        "@tailwindcss/forms@0.5.9",
+        "@tailwindcss/typography@0.5.15"
+      ],
+      "custom_config": "tailwind.config.js",
+      "postcss_config": "postcss.config.js",
+      "icons": "@heroicons/react@2.2.0",
+      "css_files": [
+        "App.css",
+        "index.css"
+      ]
+    },
+    "utilities": {
+      "http_client": "axiosClient.js with interceptors",
+      "services": [
+        {
+          "name": "authService",
+          "file": "authService.js",
+          "functions": ["login", "logout"]
+        }
+      ],
+      "hooks": [
+        {
+          "name": "useAuth",
+          "file": "useAuth.js",
+          "description": "Authentication hook"
+        },
+        {
+          "name": "useLogin",
+          "file": "useLogin.js",
+          "description": "Login hook"
+        },
+        {
+          "name": "useRegister",
+          "file": "useRegister.js",
+          "description": "Registration hook"
+        }
+      ]
+    },
+    "redux_store": {
+      "store_file": "store.js",
+      "middleware": ["SerializableCheck: disabled"],
+      "slices": [
+        {
+          "name": "authSlice",
+          "file": "authSlice.js",
+          "state_properties": ["user", "token", "isLoading", "error"]
+        },
+        {
+          "name": "roomSlice",
+          "file": "roomSlice.js",
+          "state_properties": ["rooms", "selectedRoom", "filters"]
+        }
+      ]
+    },
+    "build_config": {
+      "vite_config": "vite.config.js",
+      "eslint_config": "eslint.config.js",
+      "dev_server_port": 3000,
+      "build_output": "dist/",
+      "node_modules_alias": "@/"
+    },
+    "key_dependencies": {
+      "core": [
+        "react@18.3.1",
+        "react-dom@18.3.1",
+        "react-router-dom@6.28.0"
+      ],
+      "state_management": [
+        "@reduxjs/toolkit@2.0.1",
+        "react-redux@9.0.4"
+      ],
+      "http": [
+        "axios@1.7.7",
+        "@tanstack/react-query@4.36.1"
+      ],
+      "ui": [
+        "tailwindcss@3.4.14",
+        "@heroicons/react@2.2.0",
+        "react-toastify@9.1.3"
+      ],
+      "utilities": [
+        "dompurify@3.2.7",
+        "jsonwebtoken@9.0.2"
+      ],
+      "dev": [
+        "vite@5.4.10",
+        "@vitejs/plugin-react@4.3.3",
+        "eslint@9.13.0",
+        "@types/react@18.3.12"
+      ]
+    }
+  },
+  "core_features": [
+    {
+      "name": "User Authentication & Authorization",
+      "status": "ACTIVE",
+      "implementation": {
+        "signup": "Email/password registration with bcrypt hashing",
+        "login": "JWT-based authentication",
+        "logout": "Token removal",
+        "roles": "tenant | landlord",
+        "session": "JWT token with 1-day expiry"
+      }
+    },
+    {
+      "name": "Room Management",
+      "status": "ACTIVE",
+      "landlord_features": [
+        "Create room listing with details",
+        "Upload room images (multi-file)",
+        "Edit room information",
+        "Delete room listing",
+        "View own room listings",
+        "Track booking statistics"
+      ],
+      "tenant_features": [
+        "Search and filter rooms",
+        "View room details with images",
+        "View room reviews and ratings"
+      ]
+    },
+    {
+      "name": "Room Search & Discovery",
+      "status": "ACTIVE",
+      "search_criteria": [
+        "Price range (min/max)",
+        "District/Location",
+        "Room type (APARTMENT, MOTEL, HOUSE)",
+        "Facilities/Amenities",
+        "Pagination (page, limit)"
+      ],
+      "features": [
+        "Featured rooms display",
+        "Latest rooms display",
+        "Multi-criteria filtering",
+        "Search result sorting"
+      ]
+    },
+    {
+      "name": "Booking System",
+      "status": "ACTIVE",
+      "features": [
+        "Create booking request",
+        "Set viewing date",
+        "Add booking notes",
+        "Track booking status (pending, confirmed, cancelled)",
+        "View user bookings",
+        "Update booking status"
+      ],
+      "booking_statuses": ["pending", "confirmed", "cancelled"]
+    },
+    {
+      "name": "Reviews & Ratings",
+      "status": "ACTIVE",
+      "features": [
+        "Create review with comment and rating (1-5 stars)",
+        "View room reviews",
+        "Calculate average rating",
+        "Track review statistics"
+      ]
+    },
+    {
+      "name": "Favorites/Wishlist",
+      "status": "ACTIVE",
+      "features": [
+        "Add room to favorites",
+        "Remove room from favorites",
+        "View favorite rooms",
+        "Check if room is favorited",
+        "Track favorite count"
+      ]
+    },
+    {
+      "name": "User Profile Management",
+      "status": "ACTIVE",
+      "features": [
+        "View profile (fullName, email, phone, role, avatar)",
+        "Update profile information",
+        "Change password with validation",
+        "Upload/change avatar",
+        "View user statistics",
+        "View dashboard statistics"
+      ]
+    },
+    {
+      "name": "Notifications",
+      "status": "ACTIVE",
+      "features": [
+        "Create notifications for users",
+        "Retrieve user notifications",
+        "Mark notification as read",
+        "Notification types and messages"
+      ]
+    },
+    {
+      "name": "AI Chatbot",
+      "status": "ACTIVE",
+      "features": [
+        "Natural language query processing",
+        "Multi-criteria room search via chat",
+        "Smart suggestions and recommendations",
+        "Contextual responses (greeting, results, errors)",
+        "Room detail viewing through chat",
+        "Price range flexibility suggestions",
+        "District suggestions",
+        "Facilities filtering"
+      ],
+      "ai_technologies": [
+        "NLP (Natural Language Processing)",
+        "Intent detection",
+        "Entity extraction",
+        "Query normalization",
+        "Ranking and scoring system"
+      ]
+    },
+    {
+      "name": "File Upload",
+      "status": "ACTIVE",
+      "upload_types": [
+        {
+          "type": "Room Images",
+          "path": "./uploads/rooms",
+          "max_files": 10,
+          "allowed_formats": "Common image formats"
+        },
+        {
+          "type": "Avatar",
+          "path": "./uploads/avatars",
+          "max_files": 1,
+          "allowed_formats": "Common image formats"
+        }
+      ],
+      "static_serving": "Frontend can access via /uploads/ prefix"
+    },
+    {
+      "name": "Dashboard & Analytics",
+      "status": "ACTIVE",
+      "landlord_dashboard": [
+        "Total rooms count",
+        "Total bookings count",
+        "Recent bookings list",
+        "Room type statistics"
+      ],
+      "tenant_dashboard": [
+        "Recent bookings",
+        "Favorite count",
+        "User statistics"
+      ]
+    },
+    {
+      "name": "Messages/Chat",
+      "status": "COMMENTED_OUT",
+      "implementation": "WebSocket via Socket.io",
+      "note": "Module exists but not imported in app.module.ts"
+    },
+    {
+      "name": "Payments",
+      "status": "COMMENTED_OUT",
+      "note": "Payment processing module exists but not active"
+    },
+    {
+      "name": "Reports",
+      "status": "COMMENTED_OUT",
+      "note": "Reporting module exists but not active"
+    }
+  ],
+  "technology_stack": {
+    "backend": {
+      "runtime": "Node.js",
+      "framework": "NestJS 10.x",
+      "language": "TypeScript 5.3.3",
+      "orm": "TypeORM 0.3.27",
+      "database": "MySQL 8.x",
+      "authentication": "JWT + Passport.js",
+      "password_hashing": "bcrypt",
+      "realtime": "Socket.io 4.x",
+      "api_docs": "Swagger/OpenAPI 8.x",
+      "file_upload": "multer + sharp",
+      "nlp": "natural 8.1.0 (NLP library), fuse.js 7.1.0 (fuzzy search)"
+    },
+    "frontend": {
+      "runtime": "Browser (ES6+)",
+      "framework": "React 18.x",
+      "build_tool": "Vite 5.x",
+      "language": "JavaScript/JSX",
+      "css": "Tailwind CSS 3.x",
+      "state_management": "Redux Toolkit 2.x + Context API",
+      "http_client": "Axios 1.x",
+      "routing": "React Router v6.x",
+      "query_library": "TanStack React Query 4.x",
+      "ui_components": "Heroicons",
+      "toasts": "react-toastify",
+      "security": "DOMPurify for XSS protection"
+    },
+    "development_tools": {
+      "version_control": "Git",
+      "linting": "ESLint 9.x",
+      "package_manager": "npm",
+      "testing": "Jest 30.x",
+      "code_formatting": "Prettier 3.x"
+    },
+    "infrastructure": {
+      "container": "Not containerized (no Docker)",
+      "deployment": "Manual or platform-specific",
+      "environment_config": ".env file"
+    }
+  },
+  "current_issues_and_limitations": [
+    {
+      "category": "Architecture Issues",
+      "issues": [
+        {
+          "issue": "Commented out modules",
+          "severity": "MEDIUM",
+          "description": "PaymentsModule, MessagesModule, and ReportsModule are commented out in app.module.ts",
+          "affected_modules": ["messages", "payments", "reports"],
+          "impact": "Real-time messaging, payment processing, and reporting features are not functional"
+        },
+        {
+          "issue": "Basic role-based access control",
+          "severity": "MEDIUM",
+          "description": "No @Roles decorator or role-based guards implemented; roles stored as simple enum",
+          "current_implementation": "Manual role checking in services",
+          "recommendation": "Implement RolesGuard with @Roles() decorator for better authorization"
+        },
+        {
+          "issue": "No API versioning",
+          "severity": "LOW",
+          "description": "All endpoints are under /api prefix with no version differentiation",
+          "recommendation": "Consider /api/v1 versioning for future compatibility"
+        }
+      ]
+    },
+    {
+      "category": "Security Concerns",
+      "issues": [
+        {
+          "issue": "Password in response during registration",
+          "severity": "HIGH",
+          "file": "auth.service.ts",
+          "problem": "Password might be exposed in registration response",
+          "recommendation": "Always exclude password from response using select/exclude in TypeORM queries"
+        },
+        {
+          "issue": "Console.log statements in production code",
+          "severity": "MEDIUM",
+          "locations": [
+            "users.controller.ts",
+            "rooms.controller.ts",
+            "bookings.controller.ts",
+            "favorites.controller.ts"
+          ],
+          "problem": "Debug logs expose internal state information",
+          "recommendation": "Use proper Logger service; remove console.log from production code"
+        },
+        {
+          "issue": "JWT secret in environment variable",
+          "severity": "MEDIUM",
+          "note": "While using env variable is good practice, ensure .env is never committed",
+          "recommendation": "Add .env to .gitignore and use .env.example"
+        },
+        {
+          "issue": "CORS configuration too permissive",
+          "severity": "MEDIUM",
+          "current": "origin: true",
+          "recommendation": "Specify exact frontend URL instead of 'true'"
+        },
+        {
+          "issue": "No rate limiting",
+          "severity": "MEDIUM",
+          "problem": "No protection against brute force attacks on login endpoint",
+          "recommendation": "Implement express-rate-limit or similar throttling"
+        },
+        {
+          "issue": "No input validation on file uploads",
+          "severity": "MEDIUM",
+          "affected_endpoints": ["/rooms/upload-images", "PUT /users/avatar"],
+          "problem": "File type and size validation missing",
+          "recommendation": "Add proper file validation with type and size constraints"
+        }
+      ]
+    },
+    {
+      "category": "Performance Concerns",
+      "issues": [
+        {
+          "issue": "No pagination on all endpoints",
+          "severity": "MEDIUM",
+          "affected_endpoints": ["/reviews/room/:roomId", "/notifications", "/favorites"],
+          "problem": "Could cause performance issues with large datasets",
+          "recommendation": "Add pagination support to all list endpoints"
+        },
+        {
+          "issue": "No query optimization",
+          "severity": "MEDIUM",
+          "problem": "N+1 query problem possible in reviews and favorites endpoints",
+          "recommendation": "Use proper joins and eager loading"
+        },
+        {
+          "issue": "No caching strategy",
+          "severity": "MEDIUM",
+          "problem": "Repeated queries to database for frequently accessed data",
+          "recommendation": "Implement Redis caching for featured/latest rooms, user profiles"
+        },
+        {
+          "issue": "Full database scan on search",
+          "severity": "MEDIUM",
+          "problem": "Room search without proper indexing could be slow",
+          "recommendation": "Add database indexes on: price, district, type, facilities"
+        },
+        {
+          "issue": "Large image files",
+          "severity": "MEDIUM",
+          "problem": "No image compression/optimization",
+          "recommendation": "Use sharp library (already installed) to compress and optimize images"
+        }
+      ]
+    },
+    {
+      "category": "Code Quality Issues",
+      "issues": [
+        {
+          "issue": "Inconsistent error handling",
+          "severity": "LOW",
+          "description": "Some endpoints use try-catch, others don't",
+          "recommendation": "Standardize error handling across all endpoints"
+        },
+        {
+          "issue": "Limited test coverage",
+          "severity": "MEDIUM",
+          "problem": "No test files found in repository",
+          "recommendation": "Add unit tests for services and integration tests for controllers"
+        },
+        {
+          "issue": "DTOs not consistently used",
+          "severity": "LOW",
+          "problem": "Some endpoints use 'any' type for request bodies",
+          "recommendation": "Create and use DTOs for all request/response validation"
+        },
+        {
+          "issue": "Magic strings/numbers",
+          "severity": "LOW",
+          "examples": ["'pending'", "'APARTMENT'", "10 (max items)"],
+          "recommendation": "Extract to constants file"
+        }
+      ]
+    },
+    {
+      "category": "Frontend Issues",
+      "issues": [
+        {
+          "issue": "Routes not fully protected",
+          "severity": "HIGH",
+          "problem": "PrivateRoute component exists but not used on all protected routes",
+          "affected_pages": ["/dashboard", "/post-room", "/my-rooms", "/edit-room/:id"],
+          "recommendation": "Wrap protected routes with PrivateRoute component"
+        },
+        {
+          "issue": "No error boundary",
+          "severity": "MEDIUM",
+          "problem": "App crashes on component errors",
+          "recommendation": "Implement React Error Boundary"
+        },
+        {
+          "issue": "Limited form validation",
+          "severity": "MEDIUM",
+          "problem": "Basic validation; no comprehensive form library",
+          "recommendation": "Use react-hook-form or Formik for better validation"
+        },
+        {
+          "issue": "No loading states on requests",
+          "severity": "LOW",
+          "problem": "User experience lacks feedback during data fetching",
+          "recommendation": "Add loading spinners and skeleton screens"
+        }
+      ]
+    },
+    {
+      "category": "Feature Gaps",
+      "issues": [
+        {
+          "issue": "No email verification",
+          "severity": "MEDIUM",
+          "problem": "Registration doesn't verify email",
+          "recommendation": "Add email confirmation flow"
+        },
+        {
+          "issue": "No password reset functionality",
+          "severity": "MEDIUM",
+          "problem": "Users can't reset forgotten passwords",
+          "recommendation": "Implement password reset via email link"
+        },
+        {
+          "issue": "No two-factor authentication",
+          "severity": "MEDIUM",
+          "problem": "Single factor authentication only",
+          "recommendation": "Add optional 2FA support"
+        },
+        {
+          "issue": "Incomplete payment system",
+          "severity": "HIGH",
+          "problem": "Payment module is commented out; no payment processing",
+          "recommendation": "Implement payment gateway integration (Stripe, PayPal, etc.)"
+        },
+        {
+          "issue": "Incomplete messaging system",
+          "severity": "MEDIUM",
+          "problem": "Messages module exists but not active; no real-time chat",
+          "recommendation": "Implement WebSocket-based messaging"
+        },
+        {
+          "issue": "No image lazy loading",
+          "severity": "LOW",
+          "problem": "All images load immediately",
+          "recommendation": "Implement lazy loading for better performance"
+        },
+        {
+          "issue": "No advanced filtering UI",
+          "severity": "LOW",
+          "problem": "Search filters are basic",
+          "recommendation": "Add advanced filter panel with date range, distance, etc."
+        }
+      ]
+    },
+    {
+      "category": "Database Issues",
+      "issues": [
+        {
+          "issue": "Synchronize: true in production",
+          "severity": "HIGH",
+          "problem": "Database schema auto-synchronization enabled",
+          "recommendation": "Set synchronize: false and use migrations in production"
+        },
+        {
+          "issue": "Missing database indexes",
+          "severity": "MEDIUM",
+          "problem": "No indexes on frequently searched fields",
+          "recommendation": "Add indexes on: price, district, type, user_id, room_id"
+        },
+        {
+          "issue": "No soft deletes",
+          "severity": "LOW",
+          "problem": "Hard deletes on rooms and bookings",
+          "recommendation": "Implement soft deletes for data preservation"
+        }
+      ]
+    },
+    {
+      "category": "DevOps & Deployment",
+      "issues": [
+        {
+          "issue": "No Docker configuration",
+          "severity": "MEDIUM",
+          "problem": "Not containerized; harder to deploy",
+          "recommendation": "Add Dockerfile and docker-compose.yml"
+        },
+        {
+          "issue": "No environment configuration",
+          "severity": "MEDIUM",
+          "problem": "Hardcoded development values",
+          "recommendation": "Create .env.example and document all environment variables"
+        },
+        {
+          "issue": "No CI/CD pipeline",
+          "severity": "MEDIUM",
+          "problem": "Manual deployment required",
+          "recommendation": "Add GitHub Actions or GitLab CI"
+        },
+        {
+          "issue": "No monitoring/logging in production",
+          "severity": "MEDIUM",
+          "problem": "Limited visibility into production issues",
+          "recommendation": "Integrate with Winston/Pino logging and error tracking (Sentry)"
+        }
+      ]
+    }
+  ],
+  "recommendations_summary": [
+    {
+      "priority": "CRITICAL",
+      "recommendations": [
+        "Implement comprehensive role-based access control (RBAC) with @Roles decorator",
+        "Add proper input validation and sanitization for all endpoints",
+        "Enable commented modules (Messages, Payments, Reports) or remove them",
+        "Set synchronize: false in TypeORM config and use migrations",
+        "Remove console.log statements; use proper Logger service"
+      ]
+    },
+    {
+      "priority": "HIGH",
+      "recommendations": [
+        "Implement payment processing (activate PaymentsModule)",
+        "Add email verification and password reset flow",
+        "Wrap unprotected routes with PrivateRoute in frontend",
+        "Implement error boundaries in React app",
+        "Add database indexes on search fields (price, district, type)"
+      ]
+    },
+    {
+      "priority": "MEDIUM",
+      "recommendations": [
+        "Add comprehensive test coverage (unit & integration tests)",
+        "Implement caching strategy (Redis for frequently accessed data)",
+        "Add pagination to all list endpoints",
+        "Optimize image uploads with compression",
+        "Add rate limiting to authentication endpoints",
+        "Specify exact CORS origin instead of 'true'",
+        "Add Docker & docker-compose configuration",
+        "Implement CI/CD pipeline with GitHub Actions"
+      ]
+    },
+    {
+      "priority": "LOW",
+      "recommendations": [
+        "Add API versioning (/api/v1, /api/v2)",
+        "Extract magic strings to constants",
+        "Add loading states and skeleton screens",
+        "Implement image lazy loading",
+        "Add advanced search filter UI",
+        "Implement soft deletes for data preservation"
+      ]
+    }
+  ],
+  "deployment_readiness": {
+    "backend_readiness": "PARTIAL",
+    "backend_checklist": {
+      "environment_config": "DONE - .env variables used",
+      "database_config": "NEEDS_FIX - synchronize: true should be false in production",
+      "authentication": "DONE - JWT implemented",
+      "error_handling": "PARTIAL - Global filter but inconsistent error handling",
+      "logging": "PARTIAL - Logger service exists but console.log used widely",
+      "security": "NEEDS_FIX - CORS permissive, no rate limiting, validation missing",
+      "tests": "MISSING - No test suite",
+      "api_documentation": "PARTIAL - @nestjs/swagger installed but not configured",
+      "docker": "MISSING - No containerization"
+    },
+    "frontend_readiness": "PARTIAL",
+    "frontend_checklist": {
+      "routing": "PARTIAL - PrivateRoute exists but not fully utilized",
+      "error_handling": "NEEDS_FIX - No error boundaries",
+      "error_states": "NEEDS_FIX - Limited error state handling",
+      "loading_states": "NEEDS_FIX - Missing loading indicators",
+      "form_validation": "PARTIAL - Basic validation only",
+      "authentication": "DONE - JWT token management",
+      "performance": "NEEDS_FIX - No optimization (images, lazy loading)",
+      "accessibility": "NOT_ADDRESSED - No a11y considerations",
+      "responsive_design": "PARTIAL - Tailwind used but not fully tested"
+    }
+  },
+  "estimated_completion_status": {
+    "core_features_completed": "75%",
+    "features_in_progress": "0%",
+    "features_not_started": "25%",
+    "breakdown": {
+      "completed": [
+        "User authentication (login/register)",
+        "Room management (CRUD)",
+        "Room search & filtering",
+        "Booking system",
+        "Reviews & ratings",
+        "Favorites/wishlist",
+        "User profiles",
+        "File upload",
+        "Notifications",
+        "Dashboard (partial)",
+        "Chatbot (AI-powered search)"
+      ],
+      "not_started": [
+        "Payment processing",
+        "Real-time messaging",
+        "Advanced analytics & reporting",
+        "Email notifications",
+        "Mobile app",
+        "Two-factor authentication",
+        "Email verification"
+      ]
+    }
+  },
+  "summary": {
+    "project_status": "ACTIVE DEVELOPMENT - MVP Features Implemented",
+    "overall_code_quality": "GOOD - Well-structured but needs security & optimization improvements",
+    "maturity_level": "Early Beta",
+    "production_ready": false,
+    "key_strengths": [
+      "Well-organized modular architecture with NestJS",
+      "AI-powered chatbot for natural language search",
+      "Comprehensive database schema with proper relationships",
+      "JWT-based authentication with role support",
+      "Modern React frontend with Redux state management",
+      "Search and filtering capabilities",
+      "File upload functionality"
+    ],
+    "key_weaknesses": [
+      "Missing security hardening (rate limiting, input validation)",
+      "Incomplete modules (payments, messages, reports)",
+      "No comprehensive testing suite",
+      "Performance optimization needed",
+      "Limited authorization (no role guards)",
+      "Database configuration not production-ready",
+      "Frontend routes not fully protected"
+    ]
+  }
+}

@@ -9,14 +9,6 @@ const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Hàm xử lý click vào tin nhắn để điều hướng đến trang chi tiết phòng
-  const handleMessageClick = (content) => {
-    const roomIdMatch = content.match(/phòng (?:số )?(\d+)/i);
-    if (roomIdMatch) {
-      const roomId = roomIdMatch[1];
-      navigate(`/rooms/${roomId}`);
-    }
-  };
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -49,12 +41,68 @@ const ChatWidget = () => {
         query: input
       });
 
-      // Thêm phản hồi từ chatbot
-      const botMessage = {
-        id: Date.now() + 1,
-        type: 'bot',
-        content: response.data
-      };
+      // Parse response từ backend
+      const responseData = response.data?.data || response.data;
+      
+      let botMessage;
+
+      // Xử lý theo từng loại response
+      if (responseData.type === 'searchResults') {
+        // Hiển thị danh sách phòng
+        botMessage = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: responseData.message,
+          data: responseData,
+          isResults: true
+        };
+      } else if (responseData.type === 'noResults') {
+        // Không có kết quả
+        botMessage = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: responseData.message,
+          data: responseData,
+          isNoResults: true
+        };
+      } else if (responseData.type === 'roomDetail') {
+        // Chi tiết phòng
+        botMessage = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: responseData.message,
+          data: responseData.room,
+          isDetail: true
+        };
+      } else if (responseData.type === 'greeting') {
+        // Lời chào
+        botMessage = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: responseData.message
+        };
+      } else if (responseData.type === 'needMoreInfo') {
+        // Cần thêm thông tin
+        botMessage = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: responseData.message
+        };
+      } else if (responseData.type === 'error') {
+        // Lỗi
+        botMessage = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: responseData.message || 'Xin lỗi, có lỗi xảy ra. Vui lòng thử lại sau.'
+        };
+      } else {
+        // Default - nếu là message string
+        botMessage = {
+          id: Date.now() + 1,
+          type: 'bot',
+          content: responseData.message || JSON.stringify(responseData)
+        };
+      }
 
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
@@ -101,20 +149,118 @@ const ChatWidget = () => {
             {messages.length === 0 && (
               <div className="text-center text-gray-500">
                 <p>Xin chào! Tôi có thể giúp bạn tìm phòng.</p>
-                <p className="mt-2">Ví dụ: "Tìm phòng trọ dưới 3 triệu ở Quy Nhơn"</p>
+                <p className="mt-2">Ví dụ: "Tìm phòng trọ dưới 3 triệu"</p>
               </div>
             )}
             {messages.map(message => (
-              <div 
-                key={message.id}
-                onClick={() => message.type === 'bot' && handleMessageClick(message.content)}
-                className={`p-3 rounded-lg max-w-[80%] break-words ${
-                  message.type === 'user' 
-                    ? 'bg-primary text-white ml-auto' 
-                    : 'bg-gray-100 hover:bg-gray-200 cursor-pointer'
-                }`}
-              >
-                {message.content}
+              <div key={message.id}>
+                {message.type === 'user' ? (
+                  // User message
+                  <div className="p-3 rounded-lg max-w-[80%] break-words bg-primary text-white ml-auto">
+                    {message.content}
+                  </div>
+                ) : (
+                  // Bot message
+                  <div>
+                    {/* Message text */}
+                    <div className="p-3 rounded-lg max-w-[80%] bg-gray-100">
+                      {message.content}
+                    </div>
+
+                    {/* Search results - hiển thị room cards */}
+                    {message.isResults && message.data?.rooms && (
+                      <div className="mt-3 space-y-2 max-w-md">
+                        {message.data.rooms.map((room, idx) => (
+                          <div
+                            key={room.id}
+                            onClick={() => navigate(`/rooms/${room.id}`)}
+                            className="p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <p className="font-bold text-sm text-gray-900">{room.title}</p>
+                                <p className="text-xs text-gray-700 mt-1">
+                                  📍 {room.district} • {room.location}
+                                </p>
+                                <p className="text-sm font-semibold text-blue-600 mt-1">
+                                  💰 {room.priceFormatted}/tháng
+                                </p>
+                                {room.facilities && (
+                                  <p className="text-xs text-gray-600 mt-1">
+                                    ✨ {room.facilities}
+                                  </p>
+                                )}
+                              </div>
+                              <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded">
+                                #{room.rank}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* No results with suggestions */}
+                    {message.isNoResults && message.data?.suggestions && (
+                      <div className="mt-3 space-y-2 max-w-md">
+                        <p className="text-sm font-semibold text-gray-700 mt-2">Gợi ý cho bạn:</p>
+                        {message.data.suggestions.map((suggestion, idx) => (
+                          <div
+                            key={idx}
+                            className="p-3 bg-gray-200 rounded-lg cursor-pointer hover:bg-gray-300 transition-colors text-sm"
+                            onClick={() => {
+                              if (suggestion.type === 'priceRange') {
+                                setInput(`Tìm phòng dưới ${suggestion.newPrice / 1000000} triệu`);
+                              } else if (suggestion.type === 'district') {
+                                setInput(`Tìm phòng ở ${suggestion.availableDistricts[0]}`);
+                              } else if (suggestion.type === 'facilities') {
+                                setInput('Tìm phòng loại bỏ tiện ích');
+                              }
+                            }}
+                          >
+                            <p className="font-semibold">{suggestion.title}</p>
+                            <p className="text-gray-600">{suggestion.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Room detail */}
+                    {message.isDetail && message.data && (
+                      <div className="mt-3 p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg max-w-md">
+                        <h3 className="font-bold text-gray-900">{message.data.title}</h3>
+                        <p className="text-sm text-gray-700 mt-2">
+                          <strong>Giá:</strong> {message.data.priceFormatted}/tháng
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          <strong>Địa chỉ:</strong> {message.data.location}
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          <strong>Khu vực:</strong> {message.data.district}
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          <strong>Loại:</strong> {message.data.type}
+                        </p>
+                        {message.data.area && (
+                          <p className="text-sm text-gray-700">
+                            <strong>Diện tích:</strong> {message.data.area} m²
+                          </p>
+                        )}
+                        {message.data.facilities && (
+                          <p className="text-sm text-gray-700 mt-2">
+                            <strong>Tiện ích:</strong> {message.data.facilities}
+                          </p>
+                        )}
+                        <button
+                          onClick={() => navigate(`/rooms/${message.data.id}`)}
+                          className="mt-3 w-full px-3 py-2 bg-blue-500 text-white rounded text-sm font-semibold hover:bg-blue-600"
+                        >
+                          Xem chi tiết
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
             {isLoading && (

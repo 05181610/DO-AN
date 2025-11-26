@@ -15,6 +15,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🚀 Login form submitted with:', formData);
     login(formData);
   };
 

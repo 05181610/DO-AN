@@ -9,10 +9,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { NotificationsModule } from './notifications/notifications.module';
-// import { PaymentsModule } from './payments/payments.module';
-// import { MessagesModule } from './messages/messages.module';
-// import { DashboardModule } from './dashboard/dashboard.module';
-// import { ReportsModule } from './reports/reports.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { UploadModule } from './upload/upload.module';
 
 @Module({
@@ -30,8 +27,10 @@ import { UploadModule } from './upload/upload.module';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // Tạm thời set true để tạo bảng
-        logging: true,
+        synchronize: process.env.NODE_ENV !== 'production', // Chỉ trong development
+        logging: process.env.NODE_ENV === 'development', // Chỉ log trong development
+        migrations: [__dirname + '/migrations/*.{ts,js}'],
+        migrationsRun: true,
       }),
     }),
     UsersModule,
@@ -42,10 +41,7 @@ import { UploadModule } from './upload/upload.module';
     FavoritesModule,
     ChatbotModule,
     NotificationsModule,
-    // PaymentsModule,
-    // MessagesModule,
-    // DashboardModule,
-    // ReportsModule,
+    DashboardModule,
     UploadModule
   ],
 })

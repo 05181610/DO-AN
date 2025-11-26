@@ -80,10 +80,9 @@ export class RoomsService {
         order: { views: 'DESC' },
         take: 6,
       });
-      console.log('Featured rooms found:', rooms.length);
       return rooms;
     } catch (error) {
-      console.error('Error getting featured rooms:', error);
+      this.logger.error('Error getting featured rooms:', error);
       throw error;
     }
   }
@@ -95,10 +94,9 @@ export class RoomsService {
         order: { createdAt: 'DESC' },
         take: 6,
       });
-      console.log('Latest rooms found:', rooms.length);
       return rooms;
     } catch (error) {
-      console.error('Error getting latest rooms:', error);
+      this.logger.error('Error getting latest rooms:', error);
       throw error;
     }
   }

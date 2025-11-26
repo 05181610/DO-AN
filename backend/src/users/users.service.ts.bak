@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -15,8 +15,6 @@ import { Booking } from '../bookings/entities/booking.entity';
 
 @Injectable()
 export class UsersService {
-  private readonly logger = new Logger(UsersService.name);
-
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -43,7 +41,7 @@ export class UsersService {
 
       return user;
     } catch (error) {
-      this.logger.error('Find user by email error:', error);
+      console.error('Find user by email error:', error);
       throw error;
     }
   }
@@ -120,6 +118,7 @@ export class UsersService {
       totalRooms: user.rooms?.length || 0,
       totalBookings: user.bookings?.length || 0,
       totalReviews: user.reviews?.length || 0,
+      // Thêm các thống kê khác nếu cần
     };
   }
 
@@ -136,6 +135,8 @@ export class UsersService {
 
   async findById(id: number): Promise<User> {
     try {
+
+
       const user = await this.userRepository.findOne({ 
         where: { id },
         select: ['id', 'email', 'fullName', 'role', 'avatar', 'phone', 'createdAt', 'updatedAt'] 
@@ -147,17 +148,22 @@ export class UsersService {
       
       return user;
     } catch (error) {
-      this.logger.error('Error in findById:', error);
+      console.error('Error in findById:', error);
       throw error;
     }
   }
 
   async getDashboardStats(userId: number) {
     try {
+
+
+      
       // Tổng số phòng đã đăng
       const totalRooms = await this.roomRepository.count({
         where: { userId }
       });
+
+
 
       // Tổng lượt xem trên phòng của user
       const viewsResult = await this.roomRepository
@@ -167,6 +173,8 @@ export class UsersService {
         .getRawOne();
       
       const totalViews = parseInt(viewsResult?.total || '0');
+
+
 
       // Lượt xem trong tuần này
       const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -179,12 +187,16 @@ export class UsersService {
       
       const viewsThisWeek = parseInt(viewsThisWeekResult?.total || '0');
 
-      // Tổng lượt yêu thích NHẬN ĐƯỢC trên phòng của user
+
+
+      // Tổng lượt yêu thích NHẬN ĐƯỢC trên phòng của user (người khác yêu thích phòng của user)
       const totalFavoritesReceived = await this.favoriteRepository
         .createQueryBuilder('favorite')
         .innerJoin('favorite.room', 'room')
         .where('room.userId = :userId', { userId })
         .getCount();
+
+:', totalFavoritesReceived);
 
       // Lượt yêu thích trong tuần này nhận được
       const favoritesThisWeekReceived = await this.favoriteRepository
@@ -194,11 +206,15 @@ export class UsersService {
         .andWhere('favorite.createdAt >= :oneWeekAgo', { oneWeekAgo })
         .getCount();
 
-      // Tổng phòng mà user đã yêu thích
+
+
+      // Tổng phòng mà user đã yêu thích (favorites của user)
       const userFavorites = await this.favoriteRepository
         .createQueryBuilder('favorite')
         .where('favorite.userId = :userId', { userId })
         .getCount();
+
+:', userFavorites);
 
       // Tổng lượt đặt phòng trên phòng của user
       const totalBookings = await this.bookingRepository
@@ -207,6 +223,8 @@ export class UsersService {
         .where('room.userId = :userId', { userId })
         .getCount();
 
+
+
       // Hoạt động gần đây
       const recentActivities = await this.getRecentActivities(userId);
 
@@ -214,16 +232,18 @@ export class UsersService {
         totalRooms,
         totalViews,
         viewsThisWeek,
-        totalFavorites: totalFavoritesReceived,
+        totalFavorites: totalFavoritesReceived,  // Favorites on user's rooms (từ người khác)
         favoritesThisWeek: favoritesThisWeekReceived,
-        userFavorites,
+        userFavorites,  // Rooms user has favorited (của user)
         totalBookings,
         recentActivities
       };
       
+
+
       return result;
     } catch (error) {
-      this.logger.error('Get dashboard stats error:', error);
+      console.error('❌ Get dashboard stats error:', error);
       throw new InternalServerErrorException('Không thể lấy thống kê');
     }
   }
@@ -260,18 +280,18 @@ export class UsersService {
     })));
 
     // Lấy review gần đây
-    const recentReviews = await this.reviewRepository.find({
-      where: { user: { id: userId } },
-      relations: ['room'],
-      order: { createdAt: 'DESC' },
-      take: 5
-    });
+const recentReviews = await this.reviewRepository.find({
+  where: { user: { id: userId } },
+  relations: ['room'],
+  order: { createdAt: 'DESC' },
+  take: 5
+});
 
-    activities.push(...recentReviews.map(review => ({
-      type: 'review',
-      description: `Đã đánh giá phòng: ${review.room.title}`,
-      createdAt: review.createdAt
-    })));
+activities.push(...recentReviews.map(review => ({
+  type: 'review',
+  description: `Đã đánh giá phòng: ${review.room.title}`,
+  createdAt: review.createdAt
+})));
     
     // Sắp xếp theo thời gian và lấy 5 hoạt động gần nhất
     return activities

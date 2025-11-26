@@ -14,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -44,11 +45,13 @@ export class UsersController {
     return this.usersService.getDashboardStats(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put('profile')
-  updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.updateProfile(req.user.id, updateUserDto);
+  updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
+    return this.usersService.updateProfile(req.user.id, updateProfileDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put('change-password')
   async changePassword(
     @Request() req,
@@ -60,6 +63,7 @@ export class UsersController {
     return this.usersService.changePassword(req.user.id, changePasswordDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put('avatar')
   @UseInterceptors(
     FileInterceptor('avatar', {
@@ -77,6 +81,7 @@ export class UsersController {
     return this.usersService.updateAvatar(req.user.id, avatarUrl);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('stats')
   getUserStats(@Request() req) {
     return this.usersService.getUserStats(req.user.id);

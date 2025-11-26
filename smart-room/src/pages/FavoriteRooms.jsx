@@ -7,7 +7,7 @@ export default function FavoriteRooms() {
   const { data: favorites, isLoading } = useQuery({
     queryKey: ['favorites'],
     queryFn: async () => {
-      const response = await axiosClient.get('/api/rooms/favorites');
+      const response = await axiosClient.get('/favorites');
       return response.data;
     }
   });

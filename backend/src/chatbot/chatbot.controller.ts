@@ -8,10 +8,22 @@ export class ChatbotController {
 
   @Post('query')
   async handleQuery(@Body() body: { query: string }) {
-    console.log('Received query:', body.query);
-    const result = await this.chatbotService.handleUserQuery(body.query);
-    console.log('Response:', result);
-    return result;
+    try {
+      console.log('Received query:', body.query);
+      const result = await this.chatbotService.handleUserQuery(body.query);
+      console.log('Response:', result);
+      return {
+        success: true,
+        data: result
+      };
+    } catch (error) {
+      console.error('Chatbot error:', error);
+      return {
+        success: false,
+        error: error.message || 'Internal server error',
+        type: 'error'
+      };
+    }
   }
 
   // Thêm endpoint test để kiểm tra tất cả các phòng
@@ -49,7 +61,7 @@ export class ChatbotController {
   async testDistrict() {
     const requirements: SearchRequirements = {
       priceRange: null,
-      district: "Quy Nhơn",
+      district: "Nhân Bình",
       type: null,
       facilities: [],
       minPrice: null,
@@ -66,12 +78,17 @@ export class ChatbotController {
       priceRange: null,
       district: null,
       type: null,
-      facilities: ["máy lạnh", "wifi"],
+      facilities: ["Máy lạnh", "Wifi"],
       minPrice: null,
       maxPrice: null,
       suggestedDistricts: [],
       alternativePriceRanges: []
     };
     return this.chatbotService.searchRooms(requirements);
+  }
+
+  @Post('test/advanced-search')
+  async testAdvancedSearch(@Body() body: { query: string }) {
+    return this.handleQuery(body);
   }
 }

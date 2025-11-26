@@ -18,14 +18,10 @@ export class FavoritesService {
 
   async addToFavorites(userId: number, roomId: number) {
     try {
-      console.log('=== START ADD TO FAVORITES ===');
-      console.log('Input:', { userId, roomId });
-
       // Kiểm tra user tồn tại
       const user = await this.userRepository.findOne({
         where: { id: userId }
       });
-      console.log('Found user:', user);
 
       if (!user) {
         throw new NotFoundException('Không tìm thấy thông tin người dùng');
@@ -35,40 +31,38 @@ export class FavoritesService {
       const room = await this.roomRepository.findOne({
         where: { id: roomId }
       });
-      console.log('Found room:', room);
 
       if (!room) {
         throw new NotFoundException('Không tìm thấy phòng');
       }
 
       // Kiểm tra xem đã favorite chưa
-      const existingFavorite = await this.favoriteRepository.query(
-        'SELECT * FROM favorites WHERE userId = ? AND roomId = ?',
-        [userId, roomId]
-      );
-      console.log('Existing favorite:', existingFavorite);
+      const existingFavorite = await this.favoriteRepository.findOne({
+        where: {
+          user: { id: userId },
+          room: { id: roomId }
+        }
+      });
 
-      if (existingFavorite && existingFavorite.length > 0) {
+      if (existingFavorite) {
         throw new BadRequestException('Phòng đã có trong danh sách yêu thích');
       }
 
-      // Insert bằng raw query với prepared statement
-      const result = await this.favoriteRepository.query(
-        'INSERT INTO favorites (userId, roomId, createdAt) VALUES (?, ?, NOW())',
-        [userId, roomId]
-      );
-      console.log('Insert result:', result);
+      // Create and save new favorite using save method with proper entity
+      const favorite = new Favorite();
+      favorite.user = user;
+      favorite.room = room;
+      
+      const savedFavorite = await this.favoriteRepository.save(favorite);
 
       return {
         success: true,
-        message: 'Đã thêm vào danh sách yêu thích'
+        message: 'Đã thêm vào danh sách yêu thích',
+        data: savedFavorite
       };
 
     } catch (error) {
-      console.error('Add to favorites error:', error);
-      throw new InternalServerErrorException(
-        'Không thể thêm vào danh sách yêu thích: ' + error.message
-      );
+      throw error;
     }
   }
 
@@ -89,11 +83,25 @@ export class FavoritesService {
   }
 
   async getFavorites(userId: number) {
-    return this.favoriteRepository.find({
-      where: { user: { id: userId } },
-      relations: ['room', 'room.images'],
-      order: { createdAt: 'DESC' }
-    });
+    try {
+      const favorites = await this.favoriteRepository.find({
+        where: { user: { id: userId } },
+        relations: ['room', 'room.images', 'user'],
+        order: { createdAt: 'DESC' }
+      });
+      
+      // Extract just the rooms with their images
+      return favorites.map(fav => ({
+        id: fav.id,
+        room: fav.room,
+        isFavorite: true,
+        createdAt: fav.createdAt
+      }));
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Không thể lấy danh sách yêu thích: ' + error.message
+      );
+    }
   }
 
   async getFavoritesCount(userId: number) {

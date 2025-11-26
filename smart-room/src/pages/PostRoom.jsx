@@ -53,7 +53,9 @@ export default function PostRoom() {
   const postMutation = useMutation({
     mutationFn: async (formData) => {
       try {
+        console.log('📸 Starting to upload images...');
         const imageUrls = await uploadImages(formData.images);
+        console.log('✅ Images uploaded:', imageUrls);
         
         const roomData = {
           title: formData.title.trim(),
@@ -67,48 +69,63 @@ export default function PostRoom() {
           images: imageUrls
         };
 
-        console.log('Sending room data:', roomData);
+        console.log('📝 Sending room data:', roomData);
         
-        const response = await axiosClient.post('/api/rooms', roomData);
+        const response = await axiosClient.post('/rooms', roomData);
+        console.log('✅ Room created successfully:', response.data);
         return response.data;
       } catch (error) {
-        console.error('Error creating room:', error.response?.data);
+        console.error('❌ Error creating room:', error);
+        console.error('Response data:', error.response?.data);
         throw error;
       }
     },
     onSuccess: () => {
+      console.log('🎉 Post mutation successful');
       toast.success('Đăng tin thành công');
-      queryClient.invalidateQueries(['myRooms']);
+      queryClient.invalidateQueries(['my-rooms']);
       queryClient.invalidateQueries(['dashboard-stats']);
       navigate('/dashboard');
     },
     onError: (error) => {
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đăng tin';
-      console.error('Error details:', error.response?.data);
+      const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra khi đăng tin';
+      console.error('❌ Error details:', error.response?.data || error);
       toast.error(errorMessage);
     }
   });
 
   const uploadImages = async (files) => {
     try {
+      if (!files || files.length === 0) {
+        throw new Error('No files selected');
+      }
+
       const formData = new FormData();
-      files.forEach(file => {
+      files.forEach((file, index) => {
+        console.log(`📷 Adding file ${index + 1}: ${file.name} (${file.size} bytes)`);
         formData.append('images', file);
       });
 
-      console.log('Uploading files:', files);
+      console.log('📤 Uploading', files.length, 'files to /rooms/upload-images');
 
-      const response = await axiosClient.post('/api/rooms/upload-images', formData, {
+      const response = await axiosClient.post('/rooms/upload-images', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      console.log('Upload response:', response.data);
+      console.log('✅ Upload response:', response.data);
+      
+      if (!response.data.urls) {
+        throw new Error('No URLs returned from upload');
+      }
+      
       return response.data.urls;
     } catch (error) {
-      console.error('Upload error:', error);
-      toast.error('Lỗi khi tải ảnh lên');
+      console.error('❌ Upload error:', error);
+      console.error('Error message:', error.message);
+      console.error('Error response:', error.response?.data);
+      toast.error('Lỗi khi tải ảnh lên: ' + (error.message || error.response?.data?.message || 'Unknown error'));
       throw error;
     }
   };
@@ -116,19 +133,59 @@ export default function PostRoom() {
   // Validate form before submit
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log('🔍 Form validation starting...');
+    console.log('Form data:', formData);
     
     // Basic validation
-    if (!formData.title || !formData.price || !formData.area || !formData.location || 
-        !formData.district || !formData.type || !formData.description) {
-      toast.error('Vui lòng điền đầy đủ thông tin');
+    if (!formData.title.trim()) {
+      console.warn('❌ Missing title');
+      toast.error('Vui lòng nhập tiêu đề');
+      return;
+    }
+
+    if (!formData.price) {
+      console.warn('❌ Missing price');
+      toast.error('Vui lòng nhập giá thuê');
+      return;
+    }
+
+    if (!formData.area) {
+      console.warn('❌ Missing area');
+      toast.error('Vui lòng nhập diện tích');
+      return;
+    }
+
+    if (!formData.location.trim()) {
+      console.warn('❌ Missing location');
+      toast.error('Vui lòng nhập địa chỉ cụ thể');
+      return;
+    }
+
+    if (!formData.district) {
+      console.warn('❌ Missing district');
+      toast.error('Vui lòng chọn quận/huyện');
+      return;
+    }
+
+    if (!formData.type) {
+      console.warn('❌ Missing type');
+      toast.error('Vui lòng chọn loại phòng');
+      return;
+    }
+
+    if (!formData.description.trim()) {
+      console.warn('❌ Missing description');
+      toast.error('Vui lòng nhập mô tả chi tiết');
       return;
     }
 
     if (formData.images.length === 0) {
+      console.warn('❌ Missing images');
       toast.error('Vui lòng thêm ít nhất 1 ảnh');
       return;
     }
 
+    console.log('✅ All validations passed, submitting form');
     postMutation.mutate(formData);
   };
 
@@ -315,11 +372,19 @@ export default function PostRoom() {
 
         <button
           type="submit"
-          className="w-full bg-primary text-white py-3 rounded-lg hover:bg-secondary"
+          disabled={postMutation.isPending}
+          className="w-full bg-primary text-white py-3 rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
-          Đăng tin
+          {postMutation.isPending ? (
+            <span className="flex items-center justify-center space-x-2">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <span>Đang đăng tin...</span>
+            </span>
+          ) : (
+            '✏️ Đăng tin'
+          )}
         </button>
       </form>
     </div>
   );
-};
+}

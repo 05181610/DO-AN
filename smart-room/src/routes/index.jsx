@@ -8,6 +8,8 @@ import RoomListing from '../pages/RoomListing';
 import RoomDetail from '../pages/RoomDetail';
 import PostRoom from '../pages/PostRoom';
 import PrivateRoute from '../components/auth/PrivateRoute';
+import ProfileEdit from '../pages/ProfileEdit';
+import FavoriteRooms from '../pages/FavoriteRooms';
 const routes = createBrowserRouter([
  {
    path: '/',
@@ -25,6 +27,14 @@ const routes = createBrowserRouter([
      {
        path: 'post-room',
        element: <PrivateRoute><PostRoom /></PrivateRoute>
+     },
+     {
+       path: 'favorites',
+       element: <PrivateRoute><FavoriteRooms /></PrivateRoute>
+     },
+     {
+       path: 'profile/edit',
+       element: <PrivateRoute><ProfileEdit /></PrivateRoute>
      }
    ]
  }

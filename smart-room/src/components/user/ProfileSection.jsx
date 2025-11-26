@@ -27,7 +27,7 @@ export default function ProfileSection() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axiosClient.put('/api/users/profile', profile);
+      const response = await axiosClient.put('/users/profile', profile);
       setUser(response.data);
       toast.success('Cập nhật thông tin thành công');
     } catch (error) {
@@ -43,7 +43,7 @@ export default function ProfileSection() {
     formData.append('avatar', file);
 
     try {
-      const response = await axiosClient.put('/api/users/avatar', formData, {
+      const response = await axiosClient.put('/users/avatar', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

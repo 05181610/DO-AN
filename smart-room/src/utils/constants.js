@@ -1,35 +1,52 @@
 const CONSTANTS = {
+    // API Configuration
+    API_BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+    
+    // Routes
     PATH: {
-        ROOT_PATH: "/",
-        NOT_FOUND: "*",
-        LOGIN_PATH: "/login",
-        BUSINESS_LICENSE_PATH: "/business-license",
-        MAP_PATH: "/map",
-        DOCS_PATH: "/docs",
-        CONTACT_PATH: "/contact",   
-        BUSINESS_PATH: "/business",
-        EDIT_BUSINESS_PATH: "/business/edit/",
-        HELP_PATH: "/help",
+        HOME: '/',
+        LOGIN: '/login',
+        REGISTER: '/register',
+        DASHBOARD: '/dashboard',
+        PROFILE: '/profile',
+        ROOMS: '/rooms',
+        ROOM_DETAIL: '/rooms/:id',
+        POST_ROOM: '/post-room',
+        MY_ROOMS: '/my-rooms',
+        FAVORITES: '/favorites',
+        BOOKINGS: '/bookings',
+        NOT_FOUND: '*',
     },
-    NAME_TOKEN: "token",
-    STATUS_LOGIN: "status-login",
-    LIMIT_BUSINESS: window.innerWidth > 1700 ? 12 : 8,
-    // LIMIT_BUSINESS: 12,
-    LIMIT_EMPLOYEES: 7,
-    LIMIT_BUSINESS_LICENSE: 9,
-    INIT_POST: 0,
-    DATE_DEFAULT: new Date().toISOString().split("T")[0],
-    DATE_DEFAULT_FORMAT: "DD/MM/YYYY",
+    
+    // Storage Keys
+    TOKEN_KEY: 'smartroom_token',
+    USER_KEY: 'smartroom_user',
+    
+    // Pagination
+    LIMIT_ROOMS_PER_PAGE: 12,
+    LIMIT_SEARCH_RESULTS: 20,
     PAGE_DEFAULT: 1,
-    LICENSE_TYPE: {
-        BUSINESS: 'Giấy phép kinh doanh',
-        SECURITY: 'Giấy phép ANTT',
-        FIRE: 'Giấy phép PCCC',
+    
+    // Room Types
+    ROOM_TYPES: {
+        APARTMENT: 'APARTMENT',
+        MOTEL: 'MOTEL',
+        HOUSE: 'HOUSE',
     },
-    ACCEPT_FILE: ".pdf,.doc,.docx,.jpg,.jpeg,.png",
-    DATE_NOW: new Date(),
-    DATE_YESTERDAY: new Date(new Date().setDate(new Date().getDate() - 1)),
-    DATE_FORMAT: "YYYY/MM/DD",
+    
+    // File Upload
+    ACCEPT_FILE: '.jpg,.jpeg,.png,.pdf',
+    MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+    
+    // Date Format
+    DATE_FORMAT: 'YYYY-MM-DD',
+    DISPLAY_DATE_FORMAT: 'DD/MM/YYYY',
+    
+    // User Roles
+    USER_ROLES: {
+        TENANT: 'tenant',
+        LANDLORD: 'landlord',
+    },
 };
 
 export { CONSTANTS };
